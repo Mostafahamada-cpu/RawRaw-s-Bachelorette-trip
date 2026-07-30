@@ -19,6 +19,38 @@
 }
 </style>
 
+<!-- Firebase — shared instance (same project used across the site) -->
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBuXqTJNnAwx5RmSEhdc3fdi7jMRAsyFaE",
+    authDomain: "rawraw-s-bachelorette-trip.firebaseapp.com",
+    projectId: "rawraw-s-bachelorette-trip",
+    storageBucket: "rawraw-s-bachelorette-trip.firebasestorage.app",
+    messagingSenderId: "222624011955",
+    appId: "1:222624011955:web:14086b4fa5b522ab80c2c6",
+    measurementId: "G-42HSGZ7EJN"
+  };
+
+  // Initialize once; if an app already exists, reuse it instead of re-initializing.
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Expose the single shared Firestore handle + helpers for the page scripts.
+  window._db           = db;
+  window._fsCollection = collection;
+  window._fsAddDoc     = addDoc;
+  window._fsGetDocs    = getDocs;
+  window._fsQuery      = query;
+  window._fsOrderBy    = orderBy;
+  window._fsTimestamp  = serverTimestamp;
+
+  // Load existing wishes as soon as the DOM and Firebase are both ready.
+  window.addEventListener('DOMContentLoaded', () => { window.loadWishes && window.loadWishes(); });
+</script>
 
 <style>
 /* ══════════════════════════════════════════════════
@@ -1089,9 +1121,27 @@ const revObs = new IntersectionObserver(entries=>{
 },{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
-/* ── BOTTLE ── */
-let bottles=[]; try{bottles=JSON.parse(localStorage.getItem('bq_bottles')||'[]');}catch(e){}
-let bottleOpen=false, bottleIdx=0;
+/* ── MESSAGE IN A BOTTLE → Firestore `wishes` ── */
+let wishes = [];
+let bottleOpen = false, bottleIdx = 0;
+let castingWish = false;
+
+const CAST_DEFAULT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Cast Into the Sea';
+
+// Load all wishes (newest first). Retries until the shared Firebase instance is ready.
+window.loadWishes = async function(){
+  if(!window._db || !window._fsCollection || !window._fsGetDocs || !window._fsQuery || !window._fsOrderBy){
+    setTimeout(window.loadWishes, 300); return;
+  }
+  try{
+    const q = window._fsQuery(window._fsCollection(window._db,'wishes'), window._fsOrderBy('createdAt','desc'));
+    const snap = await window._fsGetDocs(q);
+    wishes = [];
+    snap.forEach(d => { const w = d.data(); wishes.push({ from: (w.name || 'Anonymous'), message: (w.wish || '') }); });
+    if(bottleOpen) showBottleLetter();
+  }catch(e){ console.warn('Could not load wishes:', e); }
+};
+
 function toggleBottle(){
   bottleOpen=!bottleOpen;
   const cork=document.getElementById('corkG'),wrap=document.getElementById('bottleLetterWrap'),hint=document.getElementById('bottleHint');
@@ -1100,19 +1150,44 @@ function toggleBottle(){
 }
 function showBottleLetter(){
   const fromEl=document.getElementById('letterFrom'),bodyEl=document.getElementById('letterBody');
-  if(!bottles.length){ fromEl.textContent='A wish adrift in the sea...'; bodyEl.textContent='No wishes yet. Be the first to cast one.'; return; }
-  const b=bottles[bottleIdx%bottles.length]; fromEl.textContent='From '+b.from; bodyEl.textContent=b.message;
+  if(!wishes.length){ fromEl.textContent='A wish adrift in the sea...'; bodyEl.textContent='No wishes yet. Be the first to cast one.'; return; }
+  const b=wishes[bottleIdx%wishes.length]; fromEl.textContent='From '+b.from; bodyEl.textContent=b.message;
 }
-function nextBottle(){ if(!bottles.length) return; bottleIdx=(bottleIdx+1)%bottles.length; showBottleLetter(); }
-function castBottle(){
-  const f=document.getElementById('bottleFrom').value.trim(),m=document.getElementById('bottleMsg').value.trim();
-  if(!f||!m){ alert('Please fill in all fields.'); return; }
-  bottles.push({from:f,message:m});
-  try{localStorage.setItem('bq_bottles',JSON.stringify(bottles));}catch(e){}
-  document.getElementById('bottleFrom').value=''; document.getElementById('bottleMsg').value='';
-  const btn=document.getElementById('castBtn');
-  btn.style.background='var(--ocean)'; btn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Wish Cast!';
-  setTimeout(()=>{ btn.style.background=''; btn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Cast Into the Sea'; },2200);
+function nextBottle(){ if(!wishes.length) return; bottleIdx=(bottleIdx+1)%wishes.length; showBottleLetter(); }
+
+// Persist a wish to Firestore. The button stays disabled for the whole in-flight request to block duplicates.
+async function castBottle(){
+  if(castingWish) return;
+  const nameEl=document.getElementById('bottleFrom'), msgEl=document.getElementById('bottleMsg'), btn=document.getElementById('castBtn');
+  const name=nameEl.value.trim(), wish=msgEl.value.trim();
+
+  if(!wish){ msgEl.focus(); flashCast(btn,'Please write a wish first'); return; }
+  if(!window._db || !window._fsAddDoc || !window._fsCollection || !window._fsTimestamp){ flashCast(btn,'Connecting — please try again'); return; }
+
+  castingWish=true; btn.disabled=true; btn.innerHTML='Casting…';
+
+  try{
+    await window._fsAddDoc(window._fsCollection(window._db,'wishes'), {
+      name: name || 'Anonymous',
+      wish: wish,
+      createdAt: window._fsTimestamp()
+    });
+    nameEl.value=''; msgEl.value='';
+    btn.style.background='var(--ocean)';
+    btn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Wish Cast!';
+    await window.loadWishes();
+    setTimeout(()=>{ btn.style.background=''; btn.innerHTML=CAST_DEFAULT; btn.disabled=false; castingWish=false; }, 2200);
+  }catch(e){
+    console.warn('Could not cast wish:', e);
+    castingWish=false; btn.disabled=false;
+    flashCast(btn,'Could not cast your wish — try again');
+  }
+}
+
+// Briefly show a message on the cast button, then restore its label. No layout/colour change.
+function flashCast(btn,msg){
+  btn.innerHTML=msg;
+  setTimeout(()=>{ if(!castingWish){ btn.innerHTML=CAST_DEFAULT; } }, 2600);
 }
 
 /* ── FIREWORKS ── */
