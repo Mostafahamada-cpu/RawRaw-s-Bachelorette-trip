@@ -226,10 +226,17 @@ button,input,textarea { font-family:inherit; }
 }
 
 /* Countdown */
-.countdown-wrap { margin-top:2.8rem; opacity:0; animation:fadeUp 1.2s 1.6s ease forwards; }
+.countdown-wrap { margin-top:2.8rem; opacity:0; animation:fadeUp 1.2s 1.6s ease forwards; text-align:center; }
 .countdown-label {
-  font-size:0.55rem; letter-spacing:0.5em;
-  color:rgba(255,255,255,0.38); text-transform:uppercase; margin-bottom:1.2rem;
+  font-size:0.6rem; letter-spacing:0.3em;
+  color:rgba(255,255,255,0.5); text-transform:uppercase; margin-bottom:1.2rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+@media (max-width:380px){
+  .countdown-label { font-size:0.5rem; letter-spacing:0.18em; }
+  .cd-unit { padding:0.75rem 0.6rem; min-width:48px; }
+  .cd-num { font-size:1.5rem; }
+  .countdown { gap:0.5rem; }
 }
 .countdown { display:flex; gap:1rem; justify-content:center; }
 .cd-unit {
@@ -932,6 +939,42 @@ button,input,textarea { font-family:inherit; }
 </style>
 </head>
 <body>
+<audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
+<button id="musicToggle" onclick="toggleMusic()" aria-label="Toggle music" title="Toggle music"
+  style="position:fixed;bottom:1.4rem;right:1.4rem;z-index:9998;
+         width:42px;height:42px;border-radius:50%;
+         border:1px solid rgba(200,168,106,0.45);
+         background:rgba(6,14,24,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+         color:var(--gold-light);cursor:pointer;
+         display:flex;align-items:center;justify-content:center;
+         transition:background 0.25s,border-color 0.25s;
+         font-size:1rem;line-height:1;">&#9658;</button>
+<script>
+(function(){
+  var audio = document.getElementById('bgMusic');
+  var btn   = document.getElementById('musicToggle');
+  var playing = false;
+  function tryAutoplay(){
+    if(!audio) return;
+    var p = audio.play();
+    if(p !== undefined){
+      p.then(function(){ playing=true; btn.innerHTML='&#9646;&#9646;'; }).catch(function(){
+        playing=false; btn.innerHTML='&#9658;';
+      });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', tryAutoplay);
+  document.addEventListener('click', function onFirstClick(){
+    if(!playing){ tryAutoplay(); }
+    document.removeEventListener('click', onFirstClick);
+  }, {once:true});
+  window.toggleMusic = function(){
+    if(!audio) return;
+    if(playing){ audio.pause(); playing=false; btn.innerHTML='&#9658;'; }
+    else { audio.play().then(function(){ playing=true; btn.innerHTML='&#9646;&#9646;'; }); }
+  };
+})();
+</script>
 
 <!-- ╔═══════════════════════════════════════════════╗
      ║                   HERO                         ║
@@ -973,7 +1016,10 @@ button,input,textarea { font-family:inherit; }
     <p class="hero-bride">Bachelorette &nbsp;·&nbsp; Trip</p>
 
     <div class="countdown-wrap">
-      <p class="countdown-label">Wedding Countdown &nbsp;·&nbsp; 07 October 2026</p>
+<p class="countdown-label">
+  Wedding Countdown<br>
+  07 October 2026
+</p>
       <div class="countdown">
         <div class="cd-unit"><span class="cd-num" id="cd-d">00</span><span class="cd-lbl">Days</span></div>
         <div class="cd-unit"><span class="cd-num" id="cd-h">00</span><span class="cd-lbl">Hours</span></div>
@@ -1047,17 +1093,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day1 Pool Party.jpeg" alt="Pool party night" loading="lazy"></div>
-                  <div class="polaroid-title">Pool Party Night</div>
-                  <div class="polaroid-time">Day I &nbsp;·&nbsp; 8:00 PM</div>
-                  <div class="polaroid-sub">Disco &amp; Champagne</div>
+                  <div class="polaroid-title">Pool Party</div>
+                  <div class="polaroid-time">Day I &nbsp;·&nbsp; 2:00 PM</div>
+                  <div class="polaroid-sub">Beach &amp; Pool</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">8:00 PM</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Private Pool Villa, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Disco Glam — White &amp; Gold</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">An electric pool party under the stars with disco lights, champagne towers, and the girls owning the night.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Swimsuit, cover-up, heels for after</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">70s Disco &rarr; House &rarr; Late Night R&amp;B</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Nikki Beach at midnight &mdash; gold everywhere</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">2:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Beach &amp; Pool</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Swimsuits</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Pool Party</span></div>
                   </div>
                 </div>
               </div>
@@ -1067,17 +1110,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day1 Theme Disco.jpeg" alt="Theme disco night" loading="lazy"></div>
-                  <div class="polaroid-title">Theme Disco</div>
-                  <div class="polaroid-time">Day I &nbsp;·&nbsp; 11:00 PM</div>
-                  <div class="polaroid-sub">Dance the Night Away</div>
+                  <div class="polaroid-title">Girls Gone Wild</div>
+                  <div class="polaroid-time">Day I &nbsp;·&nbsp; 8:00 PM</div>
+                  <div class="polaroid-sub">Green Beach</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">11:00 PM</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Private Villa, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Disco Glam — Sparkle &amp; Shine</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">A themed disco night to kick off the celebration. Sparkle, dance, and let loose under the disco ball.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Your best dance moves, glitter optional</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">70s Disco &rarr; Funk &rarr; Dance Pop</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Studio 54 &mdash; glamour and groove</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">8:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Green Beach</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Leopard Print / Brown</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Girls Gone Wild</span></div>
                   </div>
                 </div>
               </div>
@@ -1095,17 +1135,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day2 Girls Gone Wild.jpeg" alt="Girls gone wild night out" loading="lazy"></div>
-                  <div class="polaroid-title">Night Out</div>
-                  <div class="polaroid-time">Day II &nbsp;·&nbsp; 9:00 PM</div>
-                  <div class="polaroid-sub">The Girls Own the Night</div>
+                  <div class="polaroid-title">Slow Morning</div>
+                  <div class="polaroid-time">Day II &nbsp;·&nbsp; 12:00 PM</div>
+                  <div class="polaroid-sub">Marina</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">9:00 PM – Late</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Sahel Beach Club</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Dress to Impress — Mini or Maxi, never boring</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">The girls step out and command every room. This is the night everyone remembers.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Your best look, a fully charged phone</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Commercial &rarr; Deep House &rarr; Arabic Pop</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">White Ibiza &mdash; effortlessly divine</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">12:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Marina</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Swimsuits</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Slow Morning, Salty Afternoons 🌊☀️</span></div>
                   </div>
                 </div>
               </div>
@@ -1115,17 +1152,13 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day2 Marina.jpeg" alt="Marina day at golden hour" loading="lazy"></div>
-                  <div class="polaroid-title">Marina Day</div>
-                  <div class="polaroid-time">Day II &nbsp;·&nbsp; 11:00 AM</div>
-                  <div class="polaroid-sub">Golden Hour at Sea</div>
+                  <div class="polaroid-title">Asmak</div>
+                  <div class="polaroid-time">Day II &nbsp;·&nbsp; 5:00 PM</div>
+                  <div class="polaroid-sub">Asmak (Marina)</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">11:00 AM – Sunset</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Marina, North Coast</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Resort Chic — Linen &amp; Silk</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">A full day on the water. Azure horizon, warm breeze, the kind of blue that makes you forget everything else.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Sunscreen, sunglasses, a good book &amp; better company</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Afrobeats &rarr; Bossa Nova &rarr; Sunset Chill</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Mykonos boat day &mdash; golden light on water</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">5:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Asmak (Marina)</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Swimsuits</span></div>
                   </div>
                 </div>
               </div>
@@ -1135,17 +1168,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day2 Asmak.jpeg" alt="Asmak seafood dinner" loading="lazy"></div>
-                  <div class="polaroid-title">Midnight Beach</div>
-                  <div class="polaroid-time">Day II &nbsp;&middot;&nbsp; 12:00 AM</div>
-                  <div class="polaroid-sub">Stars Above, Waves Below</div>
+                  <div class="polaroid-title">Disco Themed</div>
+                  <div class="polaroid-time">Day II &nbsp;&middot;&nbsp; 10:00 PM</div>
+                  <div class="polaroid-sub">Colors</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">12:00 AM &ndash; Late</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">The Shoreline, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Barefoot &amp; Effortless &mdash; Wraps &amp; Warm Layers</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Stars above, waves below, nothing in between. A quiet midnight walk where the sea does all the talking.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">A shawl, bare feet, an open heart</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Ambient &rarr; Lo-fi &rarr; Ocean Sounds</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Tulum after midnight &mdash; starlit and serene</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">10:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Colors</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Shiny Colorful / Slutty</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Disco Themed</span></div>
                   </div>
                 </div>
               </div>
@@ -1163,17 +1193,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day3 RIP Single Life.jpeg" alt="RIP single life brunch" loading="lazy"></div>
-                  <div class="polaroid-title">Sunrise Brunch</div>
-                  <div class="polaroid-time">Day III &nbsp;·&nbsp; 10:00 AM</div>
-                  <div class="polaroid-sub">Golden Morning Terrace</div>
+                  <div class="polaroid-title">Apricot Mornings</div>
+                  <div class="polaroid-time">Day III &nbsp;·&nbsp; 12:00 PM</div>
+                  <div class="polaroid-sub">Garten (Telal)</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">10:00 AM</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Terrace over the sea, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Soft Florals &amp; Champagne Tones</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Brunch with a view. Fresh juices, pastries, eggs, mimosas — everything golden as the morning light.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Appetite, sunglasses, your good mood</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Acoustic &rarr; Lounge &rarr; Morning Jazz</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Santorini terrace &mdash; soft light, slower pace</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">12:00 PM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Garten (Telal)</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Apricot Colored Outfits</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Apricot Mornings</span></div>
                   </div>
                 </div>
               </div>
@@ -1183,17 +1210,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day3 Telal.jpeg" alt="Telal beach dinner" loading="lazy"></div>
-                  <div class="polaroid-title">Beach Dinner</div>
+                  <div class="polaroid-title">RIP Single Life</div>
                   <div class="polaroid-time">Day III &nbsp;·&nbsp; 9:00 PM</div>
-                  <div class="polaroid-sub">Farewell to Single Life</div>
+                  <div class="polaroid-sub">Green Beach</div>
                   <div class="polaroid-reveal">
                     <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">9:00 PM</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Private Beach, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">White Only — The Final Chapter</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">A private dinner with feet in the sand and hearts full of love. The chapter closes beautifully.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">A toast for the bride, your favorite memory</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Acoustic Soul &rarr; Ambient Beach &rarr; Slow Dance</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">Nikki Beach White Night &mdash; intimate, luminous</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Green Beach</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Black &amp; Shiny</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">RIP Single Life</span></div>
                   </div>
                 </div>
               </div>
@@ -1203,17 +1227,14 @@ button,input,textarea { font-family:inherit; }
                 <div class="polaroid-string"></div>
                 <div class="polaroid">
                   <div class="polaroid-photo"><img class="polaroid-img" src="Day3 Special Party.jpeg" alt="Special party grand finale" loading="lazy"></div>
-                  <div class="polaroid-title">Grand Finale</div>
+                  <div class="polaroid-title">Special Party</div>
                   <div class="polaroid-time">Day III &nbsp;·&nbsp; 12:00 AM</div>
-                  <div class="polaroid-sub">Fireworks &amp; Forever</div>
+                  <div class="polaroid-sub">Garden El Shaleh</div>
                   <div class="polaroid-reveal">
-                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">Midnight</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">The Beach, Sahel</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Wear your most beloved look</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Fireworks over the water, champagne in hand, surrounded by the people who love you most. The last night of this chapter.</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Bring</span><span class="reveal-val">Tears of joy are permitted</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Music Vibe</span><span class="reveal-val">Euphoric &rarr; Emotional &rarr; Anthems</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Inspo</span><span class="reveal-val">New Year's Eve in Santorini &mdash; pure magic</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">12:00 AM</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Garden El Shaleh</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Black + Shiny</span></div>
+                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Special Party</span></div>
                   </div>
                 </div>
               </div>
