@@ -91,6 +91,15 @@ body {
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
 }
+/* Lock scroll while splash is visible */
+body.splash-active {
+  overflow:hidden !important;
+  position:fixed;
+  width:100%;
+  height:100%;
+  touch-action:none;
+  -webkit-overflow-scrolling:none;
+}
 button,input,textarea { font-family:inherit; }
 
 /* ══════════════════════════════════════════════════
@@ -945,11 +954,18 @@ button,input,textarea { font-family:inherit; }
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:url('photo.JPEG') center/cover no-repeat;
   cursor:pointer;user-select:none;-webkit-user-select:none;
-  transition:opacity 0.8s ease;">
+  transition:opacity 0.8s ease;
+  touch-action:none;
+  -webkit-touch-callout:none;
+  overscroll-behavior:none;
+  min-height:100vh;
+  min-height:100dvh;">
+  <!-- Dark overlay to prevent content bleed-through -->
+  <div style="position:absolute;inset:0;background:rgba(6,12,22,0.55);pointer-events:none;"></div>
   <!-- Stars -->
   <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none" id="splashStars"></div>
   <!-- Content -->
-  <div style="position:relative;text-align:center;padding:2rem;">
+  <div style="position:relative;text-align:center;padding:2rem;z-index:2;">
     <p style="font-family:'Jost',sans-serif;font-size:0.6rem;letter-spacing:0.55em;text-transform:uppercase;color:rgba(200,168,106,0.7);margin-bottom:1.6rem;">Sahel Escape · 2026</p>
     <h1 style="font-family:'Great Vibes',cursive;font-size:clamp(4rem,16vw,7rem);color:#fff;line-height:1;margin:0;text-shadow:0 0 60px rgba(200,168,106,0.35);">RawRaw's</h1>
     <p style="font-family:'Playfair Display',serif;font-size:clamp(0.9rem,3vw,1.2rem);font-style:italic;color:var(--gold-light,#DFC08A);letter-spacing:0.3em;text-transform:uppercase;margin-top:0.6rem;">Bachelorette</p>
@@ -1011,15 +1027,27 @@ button,input,textarea { font-family:inherit; }
 
   if (!audio || !btn || !splash) return;
 
+  /* Lock body scroll while splash is showing */
+  document.body.classList.add('splash-active');
+
   audio.volume = 0.45;
 
+  var dismissed = false; /* Prevent double-fire from touchend + click */
+
   function dismiss() {
+    if (dismissed) return;
+    dismissed = true;
+
     /* Play audio — this is inside a user-gesture handler so mobile allows it */
     audio.muted = false;
     var p = audio.play();
     if (p !== undefined) {
       p.catch(function () { /* still blocked on some old devices — just continue */ });
     }
+
+    /* Unlock body scroll */
+    document.body.classList.remove('splash-active');
+    window.scrollTo(0, 0);
 
     /* Fade out and remove splash */
     splash.style.opacity = '0';
@@ -1037,6 +1065,7 @@ button,input,textarea { font-family:inherit; }
   ['click', 'touchend', 'keydown'].forEach(function (ev) {
     splash.addEventListener(ev, function handler(e) {
       e.preventDefault();
+      e.stopPropagation();
       splash.removeEventListener(ev, handler);
       dismiss();
     }, { once: true, passive: false });
