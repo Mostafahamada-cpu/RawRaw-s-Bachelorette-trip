@@ -91,15 +91,6 @@ body {
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
 }
-/* Lock scroll while splash is visible */
-body.splash-active {
-  overflow:hidden !important;
-  position:fixed;
-  width:100%;
-  height:100%;
-  touch-action:none;
-  -webkit-overflow-scrolling:none;
-}
 button,input,textarea { font-family:inherit; }
 
 /* ══════════════════════════════════════════════════
@@ -574,7 +565,7 @@ button,input,textarea { font-family:inherit; }
   margin-top:0.6rem;
 }
 .polaroid-wrap.expanded .polaroid-reveal {
-  max-height:600px; opacity:1;
+  max-height:900px; opacity:1;
 }
 .reveal-row {
   display:grid; grid-template-columns:auto 1fr; gap:0.3rem 0.6rem;
@@ -593,304 +584,241 @@ button,input,textarea { font-family:inherit; }
   line-height:1.4;
 }
 
-.reveal-row--activity {
-  align-items:start;
-}
+/* ══════════════════════════════════════════════════
+   ACTIVITIES SECTION — Standalone
+══════════════════════════════════════════════════ */
+#fun-activities { background:var(--ivory); overflow:hidden; }
+#fun-activities .section-wrap { max-width:1100px; }
 
-.reveal-row--activity .reveal-val {
-  width:100%;
-  max-width:100%;
-}
-
-.activity-lock-shell {
-  position:relative;
-  width:100%;
-  max-width:100%;
-  margin:0 auto;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  gap:0.45rem;
-  padding:0;
-  isolation:isolate;
-  box-sizing:border-box;
-}
-
-.activity-lock-mini {
+/* Day card */
+.act-day-card {
   position:relative;
   overflow:hidden;
-  width:100%;
-  max-width:100%;
-  border-radius:28px;
-  padding:20px 22px;
-  border:1px solid rgba(255,255,255,0.55);
-  background:
-    linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.55) 100%),
-    linear-gradient(135deg, rgba(72,150,176,0.07) 0%, rgba(200,168,106,0.10) 52%, rgba(255,189,145,0.10) 100%);
-  box-shadow:
-    0 18px 44px rgba(26,77,101,0.08),
-    0 6px 16px rgba(200,168,106,0.08),
-    0 0 28px rgba(200,168,106,0.06),
-    inset 0 1px 0 rgba(255,255,255,0.7);
-  backdrop-filter:blur(22px);
-  -webkit-backdrop-filter:blur(22px);
-  transform-origin:center;
-  animation:activityFloat 6.5s ease-in-out infinite;
-  transition:opacity 0.8s ease, transform 0.8s ease, box-shadow 0.8s ease, filter 0.8s ease;
-}
-
-.activity-lock-mini::before,
-.activity-lock-mini::after {
-  content:'';
-  position:absolute;
-  pointer-events:none;
-}
-
-.activity-lock-mini::before {
-  inset:-2px;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.82) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 82% 22%, rgba(255,255,255,0.68) 0 1.5px, transparent 2.5px),
-    linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.10) 32%, rgba(255,255,255,0.34) 50%, rgba(255,255,255,0.10) 68%, transparent 100%);
-  transform:translateX(-120%);
-  animation:activityShimmer 4.8s ease-in-out infinite;
-}
-
-.activity-lock-mini::after {
-  left:1rem;
-  bottom:0.9rem;
-  width:38px;
-  height:22px;
-  border-radius:50% 50% 40% 40%;
-  border:1px solid rgba(255,255,255,0.45);
-  background:linear-gradient(180deg, rgba(255,241,226,0.72), rgba(237,210,176,0.22));
-  transform:rotate(-12deg);
-  box-shadow:0 10px 24px rgba(200,168,106,0.16);
-  opacity:0.9;
-  clip-path:polygon(50% 0%, 100% 52%, 50% 100%, 0 52%);
-}
-
-.activity-lock-label {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:0.5rem;
-  margin-bottom:0.9rem;
-  font-size:clamp(0.55rem, 1vw, 0.72rem);
-  letter-spacing:0.32em;
-  text-transform:uppercase;
-  color:var(--ocean-mid);
-}
-
-.activity-lock-label::before {
-  content:'';
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:linear-gradient(180deg,var(--sunset-light),var(--gold));
-  box-shadow:0 0 0 5px rgba(255,255,255,0.18);
-  flex-shrink:0;
-}
-
-.activity-lock-countdown {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  align-items:stretch;
-  gap:10px;
-  width:100%;
-}
-
-.activity-lock-unit {
-  position:relative;
-  text-align:center;
-  flex:1 1 clamp(60px, 20vw, 96px);
-  min-width:60px;
-  max-width:100%;
-  padding:14px 10px 12px;
-  border-radius:18px;
-  background:rgba(255,255,255,0.68);
-  border:1px solid rgba(255,255,255,0.72);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px rgba(26,77,101,0.04);
-  overflow:hidden;
-}
-
-.activity-lock-unit strong {
-  display:block;
-  font-family:'Playfair Display',serif;
-  font-size:clamp(1.65rem, 5.4vw, 2.4rem);
-  font-weight:600;
-  line-height:1;
-  letter-spacing:-0.03em;
-  font-variant-numeric:tabular-nums;
-  color:var(--ocean);
-  transition:transform 0.28s ease, text-shadow 0.28s ease, color 0.28s ease;
-}
-
-.activity-lock-unit small {
-  display:block;
-  margin-top:0.4rem;
-  font-size:clamp(0.38rem, 0.95vw, 0.5rem);
-  letter-spacing:0.24em;
-  text-transform:uppercase;
-  color:var(--text-light);
-}
-
-.activity-lock-unit.is-bumping strong {
-  transform:translateY(-2px) scale(1.06);
-  text-shadow:0 0 18px rgba(200,168,106,0.18);
-}
-
-.activity-lock-list {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:0.28rem;
-  opacity:0;
-  max-height:0;
-  overflow:hidden;
-  transform:translateY(12px) scale(0.97);
-  transition:opacity 0.7s ease, transform 0.7s ease, max-height 0.8s ease;
-  text-align:center;
-  width:100%;
-}
-
-.activity-lock-list span {
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(0.78rem, 2vw, 0.95rem);
-  color:var(--text-mid);
-  line-height:1.35;
-  opacity:0;
-  transform:translateY(18px) scale(0.97);
-}
-
-.reveal-row.activity-unlocked .activity-lock-mini {
-  opacity:0;
-  transform:translateY(8px) scale(0.95);
-  max-height:0;
-  padding-top:0;
-  padding-bottom:0;
-  margin-bottom:0;
-  border-width:0;
-  filter:saturate(1.08) brightness(1.03);
-  box-shadow:0 0 0 rgba(0,0,0,0);
-}
-
-.reveal-row.activity-unlocked .activity-lock-shell {
-  min-height:0;
-}
-
-.reveal-row.activity-unlocked .activity-lock-list {
-  opacity:1;
-  max-height:220px;
-  transform:translateY(0) scale(1);
-}
-
-.reveal-row.activity-unlocked .activity-lock-list span {
-  animation:activityItemIn 0.72s cubic-bezier(0.22,1,0.36,1) forwards;
-}
-
-.reveal-row.activity-unlocked .activity-lock-list span:nth-child(1) { animation-delay:0.12s; }
-.reveal-row.activity-unlocked .activity-lock-list span:nth-child(2) { animation-delay:0.24s; }
-.reveal-row.activity-unlocked .activity-lock-list span:nth-child(3) { animation-delay:0.36s; }
-.reveal-row.activity-unlocked .activity-lock-list span:nth-child(4) { animation-delay:0.48s; }
-
-.reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after,
-.reveal-row.activity-unlocked.activity-effect-shimmer .activity-lock-shell::after {
-  content:'';
-  position:absolute;
-  inset:-12px;
-  pointer-events:none;
   border-radius:24px;
-  animation:activityBurst 1.55s ease forwards;
-}
-
-.reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after {
+  padding:2.2rem 2rem 2rem;
+  margin-bottom:3rem;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.95) 0 2px, transparent 3px),
-    radial-gradient(circle at 35% 36%, rgba(255,206,120,0.9) 0 2px, transparent 4px),
-    radial-gradient(circle at 58% 22%, rgba(255,255,255,0.88) 0 2px, transparent 3px),
-    radial-gradient(circle at 74% 30%, rgba(200,168,106,0.82) 0 2px, transparent 4px),
-    radial-gradient(circle at 88% 16%, rgba(72,150,176,0.88) 0 2px, transparent 3px);
+    linear-gradient(155deg,
+      rgba(255,255,255,0.88) 0%,
+      rgba(255,255,255,0.70) 50%,
+      rgba(200,168,106,0.04) 80%,
+      rgba(72,150,176,0.03) 100%);
+  border:1px solid rgba(255,255,255,0.55);
+  box-shadow:
+    0 16px 48px rgba(26,77,101,0.06),
+    0 4px 16px rgba(200,168,106,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  text-align:center;
 }
+.act-day-card:last-child { margin-bottom:0; }
 
-.reveal-row.activity-unlocked.activity-effect-shimmer .activity-lock-shell::after {
-  background:
-    radial-gradient(circle at 22% 24%, rgba(255,255,255,0.96) 0 2px, transparent 3px),
-    radial-gradient(circle at 42% 15%, rgba(255,221,166,0.95) 0 2px, transparent 4px),
-    radial-gradient(circle at 64% 30%, rgba(255,255,255,0.9) 0 2px, transparent 3px),
-    radial-gradient(circle at 84% 18%, rgba(200,168,106,0.86) 0 2px, transparent 4px),
-    radial-gradient(circle at 54% 56%, rgba(72,150,176,0.82) 0 2px, transparent 4px);
-}
-
-.reveal-row.activity-unlocked .activity-lock-shell::before {
+/* Shimmer sweep */
+.act-day-card::before {
   content:'';
   position:absolute;
-  inset:-8px;
-  border-radius:28px;
-  background:radial-gradient(circle at center, rgba(200,168,106,0.24) 0%, rgba(200,168,106,0.08) 28%, transparent 62%);
-  opacity:0;
-  animation:activityGlow 1.4s ease forwards;
+  inset:-2px;
   pointer-events:none;
-  z-index:-1;
+  background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.06) 70%, transparent 100%);
+  transform:translateX(-120%);
+  animation:actCardShimmer 6s ease-in-out infinite;
+  z-index:0;
+}
+@keyframes actCardShimmer {
+  0%,20% { transform:translateX(-120%); }
+  80%,100% { transform:translateX(120%); }
 }
 
-.reveal-row.activity-unlocked .activity-lock-mini::before {
-  animation:activityShimmer 1.4s ease forwards;
+/* Decorative shells */
+.act-deco { position:absolute; opacity:0.18; pointer-events:none; font-size:1.1rem; z-index:0; }
+.act-deco-tl { top:1rem; left:1.1rem; transform:rotate(-18deg); }
+.act-deco-tr { top:1.2rem; right:1.1rem; transform:rotate(15deg); }
+.act-deco-bl { bottom:1rem; left:1.2rem; transform:rotate(10deg); }
+.act-deco-br { bottom:1.1rem; right:1rem; transform:rotate(-12deg); }
+
+/* Float animation for decorations */
+.act-deco { animation:actDecoFloat 7s ease-in-out infinite; }
+.act-deco-tr { animation-delay:-1.8s; }
+.act-deco-bl { animation-delay:-3.2s; }
+.act-deco-br { animation-delay:-5s; }
+@keyframes actDecoFloat {
+  0%,100% { transform:translateY(0) rotate(var(--r,0deg)); }
+  50%     { transform:translateY(-4px) rotate(var(--r,0deg)); }
 }
 
-.reveal-row.activity-unlocked .activity-lock-mini::after {
-  animation:activityRipple 1.4s ease forwards;
+/* Day title */
+.act-day-title {
+  position:relative; z-index:1;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.4rem, 5vw, 2rem);
+  font-weight:500;
+  color:var(--ocean);
+  margin:0 0 0.6rem;
+  letter-spacing:0.02em;
 }
 
-.activity-particle-layer {
-  position:absolute;
-  inset:-12px;
+/* Activity list */
+.act-list {
+  position:relative; z-index:1;
+  list-style:none;
+  padding:0;
+  margin:0 0 1.8rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.55rem;
+}
+
+.act-list li {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(0.95rem, 2.6vw, 1.15rem);
+  color:var(--text-mid);
+  padding:0.3rem 1.2rem;
+  border-radius:24px;
+  background:rgba(255,255,255,0.5);
+  border:1px solid rgba(255,255,255,0.55);
+  box-shadow:0 2px 6px rgba(26,77,101,0.03);
+  line-height:1.4;
+}
+
+/* ── IMAGE SLIDER ── */
+.act-slider-wrap {
+  position:relative;
+  z-index:1;
+  width:100%;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 12px 36px rgba(26,77,101,0.08), 0 2px 10px rgba(200,168,106,0.06);
+}
+
+.act-slider {
+  display:flex;
+  transition:transform 0.5s cubic-bezier(0.25,1,0.5,1);
+  cursor:grab;
+  touch-action:pan-y pinch-zoom;
+  -webkit-user-select:none;
+  user-select:none;
+  will-change:transform;
+}
+.act-slider.is-dragging {
+  transition:none;
+  cursor:grabbing;
+}
+
+.act-slide {
+  flex:0 0 100%;
+  width:100%;
+  position:relative;
+  transition:transform 0.5s cubic-bezier(0.25,1,0.5,1);
+  transform:scale(0.94);
+}
+.act-slide.active {
+  transform:scale(1);
+}
+
+.act-slide img {
+  display:block;
+  width:100%;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  border-radius:0;
   pointer-events:none;
-  overflow:visible;
+  background:var(--sand);
 }
 
-.activity-particle {
-  position:absolute;
-  left:var(--x);
-  top:var(--y);
+/* Caption under each image */
+.act-caption-wrap {
+  position:relative;
+  z-index:1;
+  text-align:center;
+  min-height:2.4rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:0.9rem;
+}
+
+.act-caption {
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1rem, 3vw, 1.25rem);
+  font-style:italic;
+  color:var(--ocean);
+  letter-spacing:0.03em;
+  opacity:1;
+  transform:translateY(0);
+  transition:opacity 0.35s ease, transform 0.35s ease;
+}
+.act-caption.is-fading {
   opacity:0;
-  transform:translate(-50%, -50%) scale(0.55);
-  animation:activityParticle 1.45s ease forwards;
-  will-change:transform, opacity;
+  transform:translateY(6px);
 }
 
-.activity-particle--sparkle {
-  color:#F0C96C;
-  font-size:1.05rem;
-  text-shadow:0 0 14px rgba(240,201,108,0.36);
-}
-
-.activity-particle--bubble {
-  width:8px;
-  height:8px;
+/* Navigation arrows */
+.act-arrow {
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:40px; height:40px;
   border-radius:50%;
-  background:rgba(255,255,255,0.82);
-  box-shadow:0 0 10px rgba(255,255,255,0.28);
+  border:1px solid rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:0 4px 16px rgba(0,0,0,0.08);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ocean);
+  font-size:1rem;
+  transition:background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.act-arrow:hover {
+  background:rgba(255,255,255,0.92);
+  box-shadow:0 6px 20px rgba(0,0,0,0.12);
+  transform:translateY(-50%) scale(1.08);
+}
+.act-arrow--prev { left:12px; }
+.act-arrow--next { right:12px; }
+
+/* Pagination dots */
+.act-dots {
+  position:relative; z-index:1;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:0.8rem;
+}
+.act-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  border:none;
+  background:var(--sand-dark);
+  opacity:0.4;
+  cursor:pointer;
+  padding:0;
+  transition:opacity 0.3s, background 0.3s, transform 0.3s;
+}
+.act-dot.active {
+  opacity:1;
+  background:var(--ocean);
+  transform:scale(1.3);
 }
 
-.activity-particle--petal {
-  width:10px;
-  height:14px;
-  border-radius:70% 30% 70% 30%;
-  background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,233,242,0.7));
-  transform:translate(-50%, -50%) rotate(35deg) scale(0.55);
+/* Responsive */
+@media (max-width:540px) {
+  .act-day-card { padding:1.5rem 1.2rem 1.4rem; border-radius:20px; margin-bottom:2rem; }
+  .act-day-title { font-size:1.2rem; }
+  .act-list li { font-size:0.92rem; padding:0.25rem 0.9rem; }
+  .act-arrow { display:none; }
+  .act-slider-wrap { border-radius:16px; }
+  .act-deco { font-size:0.85rem; }
+  .act-caption { font-size:0.95rem; }
+  .act-caption-wrap { min-height:2rem; margin-top:0.7rem; }
 }
 
-.activity-particle--shell {
-  width:11px;
-  height:11px;
-  border-radius:50% 50% 45% 45%;
-  border:1px solid rgba(255,255,255,0.8);
-  background:linear-gradient(180deg, rgba(255,245,235,0.96), rgba(234,214,183,0.68));
+@media (min-width:541px) {
+  .act-slider { cursor:grab; }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1124,44 +1052,6 @@ button,input,textarea { font-family:inherit; }
 
 @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
 
-@keyframes activityShimmer {
-  0%,30% { transform:translateX(-120%); }
-  70%,100% { transform:translateX(120%); }
-}
-
-@keyframes activityBurst {
-  0% { opacity:0; transform:scale(0.95); }
-  20% { opacity:1; transform:scale(1); }
-  100% { opacity:0; transform:scale(1.06); }
-}
-
-@keyframes activityFloat {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-5px); }
-}
-
-@keyframes activityItemIn {
-  0% { opacity:0; transform:translateY(18px) scale(0.97); }
-  100% { opacity:1; transform:translateY(0) scale(1); }
-}
-
-@keyframes activityGlow {
-  0% { opacity:0; transform:scale(0.92); }
-  30% { opacity:1; }
-  100% { opacity:0; transform:scale(1.08); }
-}
-
-@keyframes activityRipple {
-  0% { opacity:0; transform:scale(0.96); }
-  18% { opacity:0.82; }
-  100% { opacity:0; transform:scale(1.1); }
-}
-
-@keyframes activityParticle {
-  0% { opacity:0; transform:translate(-50%, -50%) scale(0.35) rotate(0deg); }
-  15% { opacity:1; }
-  100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); }
-}
 
 /* ══════════════════════════════════════════════════
    RESPONSIVE
@@ -1179,14 +1069,6 @@ button,input,textarea { font-family:inherit; }
   .modal-box { padding:2rem 1.5rem; }
   .polaroid { width:155px; }
   .polaroid-row { gap:1rem 1.4rem; }
-  .activity-lock-shell { gap:0.7rem; }
-  .activity-lock-mini { padding:16px 14px; border-radius:24px; }
-  .activity-lock-label { margin-bottom:0.65rem; font-size:0.52rem; letter-spacing:0.26em; }
-  .activity-lock-countdown { gap:8px; }
-  .activity-lock-unit { flex:1 1 calc(50% - 8px); min-width:0; padding:12px 8px 10px; border-radius:15px; }
-  .activity-lock-unit strong { font-size:clamp(1.3rem, 7.5vw, 1.75rem); }
-  .activity-lock-unit small { letter-spacing:0.18em; font-size:0.36rem; }
-  .activity-lock-list span { font-size:0.84rem; }
 }
 @media (min-width:768px) {
   .section-wrap { padding:6.5rem 2rem; }
@@ -1306,49 +1188,7 @@ button,input,textarea { font-family:inherit; }
 </style>
 </head>
 <body>
-<!-- ══ SPLASH SCREEN — tap gesture unlocks audio on mobile ══ -->
-<div id="splash" style="
-  position:fixed;inset:0;z-index:99999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:url('photo.JPEG') center/cover no-repeat;
-  cursor:pointer;user-select:none;-webkit-user-select:none;
-  transition:opacity 0.8s ease;
-  touch-action:none;
-  -webkit-touch-callout:none;
-  overscroll-behavior:none;
-  min-height:100vh;
-  min-height:100dvh;">
-  <!-- Dark overlay to prevent content bleed-through -->
-  <div style="position:absolute;inset:0;background:rgba(6,12,22,0.55);pointer-events:none;"></div>
-  <!-- Stars -->
-  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none" id="splashStars"></div>
-  <!-- Content -->
-  <div style="position:relative;text-align:center;padding:2rem;z-index:2;">
-    <p style="font-family:'Jost',sans-serif;font-size:0.6rem;letter-spacing:0.55em;text-transform:uppercase;color:rgba(200,168,106,0.7);margin-bottom:1.6rem;">Sahel Escape · 2026</p>
-    <h1 style="font-family:'Great Vibes',cursive;font-size:clamp(4rem,16vw,7rem);color:#fff;line-height:1;margin:0;text-shadow:0 0 60px rgba(200,168,106,0.35);">RawRaw's</h1>
-    <p style="font-family:'Playfair Display',serif;font-size:clamp(0.9rem,3vw,1.2rem);font-style:italic;color:var(--gold-light,#DFC08A);letter-spacing:0.3em;text-transform:uppercase;margin-top:0.6rem;">Bachelorette</p>
-    <div style="width:1px;height:48px;background:linear-gradient(180deg,transparent,rgba(200,168,106,0.5),transparent);margin:1.8rem auto;"></div>
-    <!-- Tap prompt — pulses to invite touch -->
-    <div id="splashTap" style="
-      display:inline-flex;flex-direction:column;align-items:center;gap:0.7rem;
-      animation:splashPulse 2s ease-in-out infinite;">
-      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="19" cy="19" r="18" stroke="rgba(200,168,106,0.55)" stroke-width="1"/>
-        <circle cx="19" cy="19" r="12" stroke="rgba(200,168,106,0.35)" stroke-width="1" stroke-dasharray="3 3"/>
-        <path d="M15 19l3 3 5-5" stroke="rgba(200,168,106,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span style="font-family:'Jost',sans-serif;font-size:0.58rem;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.5);">Tap to Enter</span>
-    </div>
-  </div>
-</div>
-
-<style>
-@keyframes splashPulse {
-  0%,100% { opacity:0.6; transform:scale(1); }
-  50%      { opacity:1;   transform:scale(1.06); }
-}
-</style>
-
+<!-- Background music -->
 <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
 
 <button id="musicToggle" aria-label="Toggle music" title="Toggle music"
@@ -1356,87 +1196,67 @@ button,input,textarea { font-family:inherit; }
          width:42px;height:42px;border-radius:50%;
          border:1px solid rgba(200,168,106,0.45);
          background:rgba(6,14,24,0.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-         color:var(--gold-light);cursor:pointer;opacity:0;pointer-events:none;
+         color:var(--gold-light);cursor:pointer;
          display:flex;align-items:center;justify-content:center;
          transition:background 0.25s,border-color 0.25s,opacity 0.4s;
-         font-size:1rem;line-height:1;">&#9646;&#9646;</button>
+         font-size:1rem;line-height:1;">&#9658;</button>
 
 <script>
 (function () {
-  /* ── Splash stars ── */
-  var sc = document.getElementById('splashStars');
-  if (sc) {
-    for (var i = 0; i < 60; i++) {
-      var s = document.createElement('div');
-      var sz = 0.8 + Math.random() * 2;
-      s.style.cssText = 'position:absolute;border-radius:50%;background:#fff;'
-        + 'width:' + sz + 'px;height:' + sz + 'px;'
-        + 'top:' + Math.random() * 100 + '%;left:' + Math.random() * 100 + '%;'
-        + 'opacity:' + (0.2 + Math.random() * 0.7) + ';'
-        + 'animation:starPulse ' + (1.5 + Math.random() * 2) + 's ease-in-out infinite alternate;'
-        + 'animation-delay:' + Math.random() * 2 + 's;';
-      sc.appendChild(s);
-    }
-  }
-
-  var audio  = document.getElementById('bgMusic');
-  var btn    = document.getElementById('musicToggle');
-  var splash = document.getElementById('splash');
-
-  if (!audio || !btn || !splash) return;
-
-  /* Lock body scroll while splash is showing */
-  document.body.classList.add('splash-active');
-
+  var audio = document.getElementById('bgMusic');
+  var btn   = document.getElementById('musicToggle');
+  if (!audio || !btn) return;
   audio.volume = 0.45;
 
-  var dismissed = false; /* Prevent double-fire from touchend + click */
+  var unlocked = false;
+  var userPaused = false; /* true only if user manually clicked pause */
 
-  function dismiss() {
-    if (dismissed) return;
-    dismissed = true;
-
-    /* Play audio — this is inside a user-gesture handler so mobile allows it */
-    audio.muted = false;
-    var p = audio.play();
-    if (p !== undefined) {
-      p.catch(function () { /* still blocked on some old devices — just continue */ });
-    }
-
-    /* Unlock body scroll */
-    document.body.classList.remove('splash-active');
-    window.scrollTo(0, 0);
-
-    /* Fade out and remove splash */
-    splash.style.opacity = '0';
-    setTimeout(function () {
-      splash.style.display = 'none';
-    }, 800);
-
-    /* Show toggle button */
-    btn.style.opacity = '1';
-    btn.style.pointerEvents = 'auto';
-    btn.innerHTML = '&#9646;&#9646;';
+  function syncBtn(){
+    btn.innerHTML = audio.paused ? '&#9658;' : '&#9646;&#9646;';
   }
 
-  /* Accept tap, click, touchend, keydown as the entry gesture */
-  ['click', 'touchend', 'keydown'].forEach(function (ev) {
-    splash.addEventListener(ev, function handler(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      splash.removeEventListener(ev, handler);
-      dismiss();
-    }, { once: true, passive: false });
+  function tryPlay(){
+    if(userPaused) return;
+    var p = audio.play();
+    if(p !== undefined){
+      p.then(function(){ unlocked = true; syncBtn(); }).catch(function(){});
+    }
+  }
+
+  /* Attempt autoplay immediately (works on Chrome, Firefox, some Android) */
+  tryPlay();
+
+  /* iOS / Safari workaround: unlock on first user interaction */
+  function onFirstInteraction(){
+    if(unlocked) return;
+    tryPlay();
+    /* Also create & resume an AudioContext to fully unlock iOS audio */
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if(ctx.state === 'suspended') ctx.resume();
+      var src = ctx.createMediaElementSource(audio);
+      src.connect(ctx.destination);
+      tryPlay();
+    } catch(e){}
+  }
+
+  ['click','touchstart','touchend','scroll','keydown'].forEach(function(evt){
+    document.addEventListener(evt, function handler(){
+      onFirstInteraction();
+      document.removeEventListener(evt, handler, {capture:true});
+    }, {capture:true, passive:true, once:true});
   });
 
-  /* Toggle button — pause / resume */
+  /* Toggle button — manual pause/resume */
   btn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (audio.paused) {
-      audio.play().then(function () { btn.innerHTML = '&#9646;&#9646;'; });
+      userPaused = false;
+      audio.play().then(syncBtn).catch(function(){});
     } else {
+      userPaused = true;
       audio.pause();
-      btn.innerHTML = '&#9658;';
+      syncBtn();
     }
   });
 
@@ -1644,26 +1464,6 @@ button,input,textarea { font-family:inherit; }
                     <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Colors</span></div>
                     <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Shiny Colorful / Slutty</span></div>
                     <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Disco Themed</span></div>
-                    <div class="reveal-row reveal-row--activity" data-activity-lock="day2" data-activity-effect="confetti">
-                      <span class="reveal-label">Activities</span>
-                      <div class="reveal-val activity-lock-shell">
-                        <div class="activity-lock-mini">
-                          <div class="activity-lock-label">🌴 Unlocks in</div>
-                          <div class="activity-lock-countdown" data-activity-countdown="day2">
-                            <div class="activity-lock-unit"><strong data-days>00</strong><small>Days</small></div>
-                            <div class="activity-lock-unit"><strong data-hours>00</strong><small>Hours</small></div>
-                            <div class="activity-lock-unit"><strong data-minutes>00</strong><small>Minutes</small></div>
-                            <div class="activity-lock-unit"><strong data-seconds>00</strong><small>Seconds</small></div>
-                          </div>
-                        </div>
-                        <div class="activity-lock-list">
-                          <span>Guess the Dress</span>
-                          <span>Kiss the Miss Goodbye</span>
-                          <span>Dates Jar</span>
-                          <span>Bridal Advice Card</span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1726,25 +1526,6 @@ button,input,textarea { font-family:inherit; }
                       <span class="reveal-label">Description</span>
                       <span class="reveal-val">Special Party</span>
                     </div>
-                    <div class="reveal-row reveal-row--activity" data-activity-lock="day3" data-activity-effect="shimmer">
-                      <span class="reveal-label">Activities</span>
-                      <div class="reveal-val activity-lock-shell">
-                        <div class="activity-lock-mini">
-                          <div class="activity-lock-label">🌊 Unlocks in</div>
-                          <div class="activity-lock-countdown" data-activity-countdown="day3">
-                            <div class="activity-lock-unit"><strong data-days>00</strong><small>Days</small></div>
-                            <div class="activity-lock-unit"><strong data-hours>00</strong><small>Hours</small></div>
-                            <div class="activity-lock-unit"><strong data-minutes>00</strong><small>Minutes</small></div>
-                            <div class="activity-lock-unit"><strong data-seconds>00</strong><small>Seconds</small></div>
-                          </div>
-                        </div>
-                        <div class="activity-lock-list">
-                          <span>Rings Hunt</span>
-                          <span>Bubuka and Bulaklak</span>
-                          <span>Don't Get Caught on Camera</span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1756,6 +1537,63 @@ button,input,textarea { font-family:inherit; }
 </section>
 
 
+<!-- ╔═══════════════════════════════════════════════╗
+     ║              ✨ ACTIVITIES                      ║
+     ╚═══════════════════════════════════════════════╝ -->
+<section id="fun-activities">
+  <div class="section-wrap">
+    <p class="s-eyebrow reveal">Fun &amp; Games</p>
+    <h2 class="s-title reveal">✨ <em>Activities</em></h2>
+    <div class="gold-rule reveal"><span class="gold-dot"></span></div>
+
+    <!-- ═══ DAY 2 ═══ -->
+    <div class="act-day-card reveal">
+      <span class="act-deco act-deco-tl" style="--r:-18deg">🌴</span>
+      <span class="act-deco act-deco-tr" style="--r:15deg">🐚</span>
+      <span class="act-deco act-deco-bl" style="--r:10deg">🌊</span>
+      <span class="act-deco act-deco-br" style="--r:-12deg">✦</span>
+
+      <h3 class="act-day-title">🌴 Day 2 Activities</h3>
+      
+      <div class="act-slider-wrap">
+        <div class="act-slider" data-slider="day2">
+          <div class="act-slide active" data-caption="Guess the Dress"><img src="Guess The Dress.jpeg" alt="Guess the Dress" loading="lazy"></div>
+          <div class="act-slide" data-caption="Kiss the Miss Goodbye"><img src="Kiss the Miss GoodBye.jpeg" alt="Kiss the Miss Goodbye" loading="lazy"></div>
+          <div class="act-slide" data-caption="Dates Jar"><img src="Date Jar.jpeg" alt="Dates Jar" loading="lazy"></div>
+          <div class="act-slide" data-caption="Bridal Advice Card"><img src="Bridal Advice Card.jpeg" alt="Bridal Advice Card" loading="lazy"></div>
+        </div>
+        <button class="act-arrow act-arrow--prev" data-arrow="prev" aria-label="Previous">&#8592;</button>
+        <button class="act-arrow act-arrow--next" data-arrow="next" aria-label="Next">&#8594;</button>
+      </div>
+      <div class="act-caption-wrap"><span class="act-caption" data-caption-display="day2">Guess the Dress</span></div>
+      <div class="act-dots" data-dots="day2"></div>
+    </div>
+
+    <!-- ═══ DAY 3 ═══ -->
+    <div class="act-day-card reveal">
+      <span class="act-deco act-deco-tl" style="--r:-18deg">🌊</span>
+      <span class="act-deco act-deco-tr" style="--r:15deg">✦</span>
+      <span class="act-deco act-deco-bl" style="--r:10deg">🐚</span>
+      <span class="act-deco act-deco-br" style="--r:-12deg">🌴</span>
+
+      <h3 class="act-day-title">🌊 Day 3 Activities</h3>
+      
+
+      <div class="act-slider-wrap">
+        <div class="act-slider" data-slider="day3">
+          <div class="act-slide active" data-caption="Rings Hunt"><img src="Rings Hunt.jpeg" alt="Rings Hunt" loading="lazy"></div>
+          <div class="act-slide" data-caption="Bubuka and Bulaklak"><img src="Bubka And Bulaka.jpeg" alt="Bubuka and Bulaklak" loading="lazy"></div>
+          <div class="act-slide" data-caption="Don't Get Caught on Camera"><img src="Don't Get Caught On Camera.jpeg" alt="Don't Get Caught on Camera" loading="lazy"></div>
+        </div>
+        <button class="act-arrow act-arrow--prev" data-arrow="prev" aria-label="Previous">&#8592;</button>
+        <button class="act-arrow act-arrow--next" data-arrow="next" aria-label="Next">&#8594;</button>
+      </div>
+      <div class="act-caption-wrap"><span class="act-caption" data-caption-display="day3">Rings Hunt</span></div>
+      <div class="act-dots" data-dots="day3"></div>
+    </div>
+
+  </div>
+</section>
 
 
 <!-- ╔═══════════════════════════════════════════════╗
@@ -1923,97 +1761,7 @@ button,input,textarea { font-family:inherit; }
 
 /* ── COUNTDOWN ── */
 const WEDDING = new Date('2026-10-07T00:00:00');
-const ACTIVITY_LOCKS = [
-  { key:'day2', target:new Date(2026, 7, 7, 14, 0, 0), rowSelector:'[data-activity-lock="day2"]', effect:'confetti' },
-  { key:'day3', target:new Date(2026, 7, 8, 17, 0, 0), rowSelector:'[data-activity-lock="day3"]', effect:'shimmer' }
-];
-
 function pad(n){ return String(n).padStart(2,'0'); }
-
-function bumpCountdownUnit(unit){
-  if(!unit) return;
-  unit.classList.remove('is-bumping');
-  requestAnimationFrame(() => {
-    unit.classList.add('is-bumping');
-    window.setTimeout(() => unit.classList.remove('is-bumping'), 260);
-  });
-}
-
-function launchActivityBurst(row, effect){
-  const shell = row.querySelector('.activity-lock-shell');
-  if(!shell) return;
-
-  const layer = document.createElement('div');
-  layer.className = 'activity-particle-layer';
-  shell.appendChild(layer);
-
-  const particleTypes = effect === 'shimmer'
-    ? ['sparkle', 'sparkle', 'shell', 'petal', 'bubble']
-    : ['sparkle', 'bubble', 'shell', 'petal', 'sparkle'];
-  const sparkleGlyphs = ['✦', '✧', '✺', '❈'];
-
-  for(let i = 0; i < 14; i++){
-    const particle = document.createElement('span');
-    const type = particleTypes[i % particleTypes.length];
-    particle.className = `activity-particle activity-particle--${type}`;
-    particle.style.setProperty('--x', `${14 + Math.random() * 72}%`);
-    particle.style.setProperty('--y', `${18 + Math.random() * 56}%`);
-    particle.style.setProperty('--dx', `${(Math.random() * 2 - 1) * 92}px`);
-    particle.style.setProperty('--dy', `${-28 - Math.random() * 92}px`);
-    particle.style.setProperty('--rot', `${(Math.random() * 240 - 120).toFixed(1)}deg`);
-    particle.style.animationDelay = `${Math.random() * 0.18}s`;
-
-    if(type === 'sparkle'){
-      particle.textContent = sparkleGlyphs[Math.floor(Math.random() * sparkleGlyphs.length)];
-    }
-
-    layer.appendChild(particle);
-  }
-
-  window.setTimeout(() => layer.remove(), 1650);
-}
-
-function updateActivityLock(lock){
-  const row = document.querySelector(lock.rowSelector);
-  if(!row) return;
-
-  const diff = lock.target.getTime() - Date.now();
-  const digits = {
-    days: Math.max(0, Math.floor(diff / 86400000)),
-    hours: Math.max(0, Math.floor(diff % 86400000 / 3600000)),
-    minutes: Math.max(0, Math.floor(diff % 3600000 / 60000)),
-    seconds: Math.max(0, Math.floor(diff % 60000 / 1000))
-  };
-
-  if(diff <= 0){
-    if(!row.classList.contains('activity-unlocked')){
-      requestAnimationFrame(() => {
-        row.classList.add('activity-unlocked', lock.effect === 'confetti' ? 'activity-effect-confetti' : 'activity-effect-shimmer');
-        launchActivityBurst(row, lock.effect);
-      });
-      window.setTimeout(() => row.classList.remove('activity-effect-confetti', 'activity-effect-shimmer'), 1700);
-    }
-    return;
-  }
-
-  const setAndBump = (selector, value) => {
-    const el = row.querySelector(selector);
-    if(el){
-      el.textContent = pad(value);
-      bumpCountdownUnit(el.closest('.activity-lock-unit'));
-    }
-  };
-
-  setAndBump('[data-days]', digits.days);
-  setAndBump('[data-hours]', digits.hours);
-  setAndBump('[data-minutes]', digits.minutes);
-  setAndBump('[data-seconds]', digits.seconds);
-}
-
-function updateActivityLocks(){
-  ACTIVITY_LOCKS.forEach(updateActivityLock);
-}
-
 function tick(){
   const diff = WEDDING - Date.now();
   if(diff>0){
@@ -2022,7 +1770,6 @@ function tick(){
     set('cd-d',d);set('cd-h',h);set('cd-m',m);set('cd-s',s);
     set('fcd-d',d);set('fcd-h',h);set('fcd-m',m);set('fcd-s',s);
   }
-  updateActivityLocks();
 }
 tick(); setInterval(tick,1000);
 
@@ -2233,6 +1980,136 @@ const galleryImages = [
   function launch(){ if(!active) return; fws.push(new Fw()); setTimeout(launch,700+Math.random()*1100); }
   (function frame(){ ctx.clearRect(0,0,W,H); fws=fws.filter(fw=>fw.draw()); requestAnimationFrame(frame); })();
   new IntersectionObserver(entries=>{ if(entries[0].isIntersecting&&!active){active=true;launch();} },{threshold:0.25}).observe(document.getElementById('finale'));
+})();
+
+/* ══════════════════════════════════════════════════
+   ACTIVITIES SLIDER — custom, no libraries
+══════════════════════════════════════════════════ */
+(function(){
+  document.querySelectorAll('.act-slider').forEach(function(track){
+    var wrap   = track.closest('.act-slider-wrap');
+    var card   = track.closest('.act-day-card');
+    var slides = track.querySelectorAll('.act-slide');
+    var n      = slides.length;
+    if(n < 2) return;
+
+    var day        = track.dataset.slider;
+    var dotsWrap   = card.querySelector('.act-dots[data-dots="' + day + '"]');
+    var captionEl  = card.querySelector('[data-caption-display="' + day + '"]');
+    var prevBtn    = wrap.querySelector('[data-arrow="prev"]');
+    var nextBtn    = wrap.querySelector('[data-arrow="next"]');
+
+    var cur = 0;
+    var startX = 0, startY = 0, dx = 0, dragging = false, locked = false;
+    var trackW = track.offsetWidth || 1;
+
+    /* Build dots */
+    for(var i = 0; i < n; i++){
+      var dot = document.createElement('button');
+      dot.className = 'act-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      (function(idx){ dot.addEventListener('click', function(){ goTo(idx); }); })(i);
+      dotsWrap.appendChild(dot);
+    }
+
+    function updateCaption(){
+      if(!captionEl) return;
+      var text = slides[cur].dataset.caption || '';
+      captionEl.classList.add('is-fading');
+      setTimeout(function(){
+        captionEl.textContent = text;
+        captionEl.classList.remove('is-fading');
+      }, 200);
+    }
+
+    function setActiveSlide(){
+      slides.forEach(function(s, i){ s.classList.toggle('active', i === cur); });
+    }
+
+    function goTo(idx){
+      var prev = cur;
+      cur = Math.max(0, Math.min(n - 1, idx));
+      trackW = track.offsetWidth || 1;
+      track.style.transform = 'translateX(' + (-cur * 100) + '%)';
+      dotsWrap.querySelectorAll('.act-dot').forEach(function(d, i){
+        d.classList.toggle('active', i === cur);
+      });
+      setActiveSlide();
+      if(prev !== cur) updateCaption();
+    }
+
+    /* Arrow clicks */
+    prevBtn.addEventListener('click', function(){ goTo(cur - 1); });
+    nextBtn.addEventListener('click', function(){ goTo(cur + 1); });
+
+    /* ── Touch events (mobile) ── */
+    track.addEventListener('touchstart', function(e){
+      trackW = track.offsetWidth || 1;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      locked = false;
+      dx = 0;
+      track.classList.add('is-dragging');
+    }, { passive: true });
+
+    track.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      dx = e.touches[0].clientX - startX;
+      var dy = Math.abs(e.touches[0].clientY - startY);
+      if(!locked){
+        if(dy > Math.abs(dx) * 0.8){ dragging = false; track.classList.remove('is-dragging'); return; }
+        locked = true;
+      }
+      e.preventDefault();
+      /* Rubber-band at edges */
+      var pct = (dx / trackW) * 100;
+      if((cur === 0 && dx > 0) || (cur === n-1 && dx < 0)) pct *= 0.3;
+      track.style.transform = 'translateX(' + (-cur * 100 + pct) + '%)';
+    }, { passive: false });
+
+    track.addEventListener('touchend', function(){
+      if(!dragging){ track.classList.remove('is-dragging'); return; }
+      dragging = false;
+      track.classList.remove('is-dragging');
+      var threshold = trackW * 0.18;
+      if(dx < -threshold) goTo(cur + 1);
+      else if(dx > threshold) goTo(cur - 1);
+      else goTo(cur);
+    });
+
+    /* ── Mouse drag (desktop) ── */
+    var mouseDragging = false;
+    track.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      trackW = track.offsetWidth || 1;
+      startX = e.clientX;
+      mouseDragging = true;
+      dx = 0;
+      track.classList.add('is-dragging');
+    });
+
+    document.addEventListener('mousemove', function(e){
+      if(!mouseDragging) return;
+      dx = e.clientX - startX;
+      var pct = (dx / trackW) * 100;
+      if((cur === 0 && dx > 0) || (cur === n-1 && dx < 0)) pct *= 0.3;
+      track.style.transform = 'translateX(' + (-cur * 100 + pct) + '%)';
+    });
+
+    document.addEventListener('mouseup', function(){
+      if(!mouseDragging) return;
+      mouseDragging = false;
+      track.classList.remove('is-dragging');
+      var threshold = trackW * 0.18;
+      if(dx < -threshold) goTo(cur + 1);
+      else if(dx > threshold) goTo(cur - 1);
+      else goTo(cur);
+    });
+
+    /* Recalculate on resize */
+    window.addEventListener('resize', function(){ trackW = track.offsetWidth || 1; });
+  });
 })();
 </script>
 </body>
