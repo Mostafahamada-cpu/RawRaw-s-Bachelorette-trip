@@ -687,13 +687,18 @@ button,input,textarea { font-family:inherit; }
   position:relative;
   z-index:1;
   width:100%;
+  max-width:420px;
+  margin:0 auto;
   border-radius:20px;
   overflow:hidden;
   box-shadow:0 12px 36px rgba(26,77,101,0.08), 0 2px 10px rgba(200,168,106,0.06);
+  /* Lock the wrapper height to the 4:5 ratio so it never shifts */
+  aspect-ratio:4/5;
 }
 
 .act-slider {
   display:flex;
+  height:100%;
   transition:transform 0.5s cubic-bezier(0.25,1,0.5,1);
   cursor:grab;
   touch-action:pan-y pinch-zoom;
@@ -709,6 +714,7 @@ button,input,textarea { font-family:inherit; }
 .act-slide {
   flex:0 0 100%;
   width:100%;
+  height:100%;
   position:relative;
   transition:transform 0.5s cubic-bezier(0.25,1,0.5,1);
   transform:scale(0.94);
@@ -720,8 +726,9 @@ button,input,textarea { font-family:inherit; }
 .act-slide img {
   display:block;
   width:100%;
-  aspect-ratio:16/10;
+  height:100%;
   object-fit:cover;
+  object-position:center;
   border-radius:0;
   pointer-events:none;
   background:var(--sand);
@@ -811,7 +818,7 @@ button,input,textarea { font-family:inherit; }
   .act-day-title { font-size:1.2rem; }
   .act-list li { font-size:0.92rem; padding:0.25rem 0.9rem; }
   .act-arrow { display:none; }
-  .act-slider-wrap { border-radius:16px; }
+  .act-slider-wrap { border-radius:16px; max-width:340px; }
   .act-deco { font-size:0.85rem; }
   .act-caption { font-size:0.95rem; }
   .act-caption-wrap { min-height:2rem; margin-top:0.7rem; }
@@ -1189,7 +1196,7 @@ button,input,textarea { font-family:inherit; }
 </head>
 <body>
 <!-- Background music -->
-<audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
+<audio id="bgMusic" src="music.mp3" loop preload="auto" playsinline></audio>
 
 <button id="musicToggle" aria-label="Toggle music" title="Toggle music"
   style="position:fixed;bottom:1.4rem;right:1.4rem;z-index:9998;
@@ -1209,50 +1216,76 @@ button,input,textarea { font-family:inherit; }
   audio.volume = 0.45;
 
   var unlocked = false;
-  var userPaused = false; /* true only if user manually clicked pause */
+  var userPaused = false;
 
   function syncBtn(){
     btn.innerHTML = audio.paused ? '&#9658;' : '&#9646;&#9646;';
   }
 
+  /* ── Core play function ── */
   function tryPlay(){
-    if(userPaused) return;
+    if(userPaused || unlocked) return;
     var p = audio.play();
     if(p !== undefined){
-      p.then(function(){ unlocked = true; syncBtn(); }).catch(function(){});
+      p.then(function(){
+        unlocked = true;
+        removeUnlockListeners();
+        syncBtn();
+      }).catch(function(){
+        /* Play blocked — will retry on next user gesture */
+      });
     }
   }
 
-  /* Attempt autoplay immediately (works on Chrome, Firefox, some Android) */
+  /* ── Attempt autoplay immediately (Chrome, Firefox, Android) ── */
   tryPlay();
 
-  /* iOS / Safari workaround: unlock on first user interaction */
-  function onFirstInteraction(){
+  /* ── iOS / Safari: unlock on first real user gesture ──
+     iOS only honours: touchstart, touchend, click, pointerdown.
+     Do NOT use createMediaElementSource — it reroutes audio
+     through Web Audio API and breaks playback if AudioContext
+     is still suspended. A plain audio.play() inside a user
+     gesture handler is all iOS needs.                          */
+  var unlockEvents = ['touchstart','touchend','click','pointerdown'];
+  var handlers = [];
+
+  function onUserGesture(){
     if(unlocked) return;
-    tryPlay();
-    /* Also create & resume an AudioContext to fully unlock iOS audio */
-    try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if(ctx.state === 'suspended') ctx.resume();
-      var src = ctx.createMediaElementSource(audio);
-      src.connect(ctx.destination);
-      tryPlay();
-    } catch(e){}
+    /* Direct play() call inside a user-activation event */
+    var p = audio.play();
+    if(p !== undefined){
+      p.then(function(){
+        unlocked = true;
+        removeUnlockListeners();
+        syncBtn();
+      }).catch(function(){
+        /* Still blocked — keep listeners for next gesture */
+      });
+    }
   }
 
-  ['click','touchstart','touchend','scroll','keydown'].forEach(function(evt){
-    document.addEventListener(evt, function handler(){
-      onFirstInteraction();
-      document.removeEventListener(evt, handler, {capture:true});
-    }, {capture:true, passive:true, once:true});
+  function removeUnlockListeners(){
+    unlockEvents.forEach(function(evt, i){
+      document.removeEventListener(evt, handlers[i], true);
+    });
+  }
+
+  unlockEvents.forEach(function(evt){
+    var h = function(){ onUserGesture(); };
+    handlers.push(h);
+    document.addEventListener(evt, h, { capture:true, passive:true });
   });
 
-  /* Toggle button — manual pause/resume */
+  /* ── Toggle button ── */
   btn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (audio.paused) {
       userPaused = false;
-      audio.play().then(syncBtn).catch(function(){});
+      audio.play().then(function(){
+        unlocked = true;
+        removeUnlockListeners();
+        syncBtn();
+      }).catch(function(){});
     } else {
       userPaused = true;
       audio.pause();
