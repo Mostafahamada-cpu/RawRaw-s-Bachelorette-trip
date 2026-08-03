@@ -582,6 +582,175 @@ button,input,textarea { font-family:inherit; }
   line-height:1.4;
 }
 
+.reveal-row--activity {
+  align-items:start;
+}
+
+.activity-lock-shell {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:0.55rem;
+  width:100%;
+}
+
+.activity-lock-mini {
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  padding:0.72rem 0.8rem;
+  border:1px solid rgba(255,255,255,0.5);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.18) 100%),
+    linear-gradient(135deg, rgba(72,150,176,0.10) 0%, rgba(200,168,106,0.12) 55%, rgba(255,189,145,0.14) 100%);
+  box-shadow:0 10px 30px rgba(26,77,101,0.08), inset 0 1px 0 rgba(255,255,255,0.45);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  transition:opacity 0.55s ease, transform 0.55s ease, max-height 0.65s ease, padding 0.55s ease, margin 0.55s ease;
+}
+
+.activity-lock-mini::before,
+.activity-lock-mini::after {
+  content:'';
+  position:absolute;
+  pointer-events:none;
+}
+
+.activity-lock-mini::before {
+  inset:0;
+  background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.10) 32%, rgba(255,255,255,0.30) 50%, rgba(255,255,255,0.08) 68%, transparent 100%);
+  transform:translateX(-120%);
+  animation:activityShimmer 4.8s ease-in-out infinite;
+}
+
+.activity-lock-mini::after {
+  right:0.55rem;
+  bottom:0.45rem;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 65% 30%, rgba(255,255,255,0.65) 0 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
+  opacity:0.7;
+}
+
+.activity-lock-label {
+  display:flex;
+  align-items:center;
+  gap:0.45rem;
+  margin-bottom:0.55rem;
+  font-size:0.5rem;
+  letter-spacing:0.32em;
+  text-transform:uppercase;
+  color:var(--ocean-mid);
+}
+
+.activity-lock-label::before {
+  content:'';
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:linear-gradient(180deg,var(--sunset-light),var(--gold));
+  box-shadow:0 0 0 5px rgba(255,255,255,0.18);
+  flex-shrink:0;
+}
+
+.activity-lock-countdown {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:0.35rem;
+}
+
+.activity-lock-unit {
+  text-align:center;
+  padding:0.4rem 0.2rem;
+  border-radius:10px;
+  background:rgba(255,255,255,0.48);
+  border:1px solid rgba(255,255,255,0.55);
+}
+
+.activity-lock-unit strong {
+  display:block;
+  font-family:'Playfair Display',serif;
+  font-size:1rem;
+  font-weight:400;
+  line-height:1;
+  color:var(--ocean);
+}
+
+.activity-lock-unit small {
+  display:block;
+  margin-top:0.25rem;
+  font-size:0.35rem;
+  letter-spacing:0.24em;
+  text-transform:uppercase;
+  color:var(--text-light);
+}
+
+.activity-lock-list {
+  display:flex;
+  flex-direction:column;
+  gap:0.22rem;
+  opacity:0;
+  max-height:0;
+  overflow:hidden;
+  transform:translateY(8px);
+  transition:opacity 0.55s ease, transform 0.55s ease, max-height 0.7s ease;
+}
+
+.activity-lock-list span {
+  font-family:'Cormorant Garamond',serif;
+  font-size:0.8rem;
+  color:var(--text-mid);
+  line-height:1.35;
+}
+
+.reveal-row.activity-unlocked .activity-lock-mini {
+  opacity:0;
+  transform:translateY(-8px);
+  max-height:0;
+  margin:0;
+  padding-top:0;
+  padding-bottom:0;
+  border-width:0;
+}
+
+.reveal-row.activity-unlocked .activity-lock-list {
+  opacity:1;
+  max-height:140px;
+  transform:translateY(0);
+}
+
+.reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after,
+.reveal-row.activity-unlocked.activity-effect-shimmer .activity-lock-shell::after {
+  content:'';
+  position:absolute;
+  inset:-10px;
+  pointer-events:none;
+  border-radius:18px;
+  animation:activityBurst 1.25s ease forwards;
+}
+
+.reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.95) 0 2px, transparent 3px),
+    radial-gradient(circle at 35% 36%, rgba(255,206,120,0.9) 0 2px, transparent 4px),
+    radial-gradient(circle at 58% 22%, rgba(255,255,255,0.88) 0 2px, transparent 3px),
+    radial-gradient(circle at 74% 30%, rgba(200,168,106,0.82) 0 2px, transparent 4px),
+    radial-gradient(circle at 88% 16%, rgba(72,150,176,0.88) 0 2px, transparent 3px);
+}
+
+.reveal-row.activity-unlocked.activity-effect-shimmer .activity-lock-shell::after {
+  background:
+    radial-gradient(circle at 22% 24%, rgba(255,255,255,0.96) 0 2px, transparent 3px),
+    radial-gradient(circle at 42% 15%, rgba(255,221,166,0.95) 0 2px, transparent 4px),
+    radial-gradient(circle at 64% 30%, rgba(255,255,255,0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 84% 18%, rgba(200,168,106,0.86) 0 2px, transparent 4px),
+    radial-gradient(circle at 54% 56%, rgba(72,150,176,0.82) 0 2px, transparent 4px);
+}
+
 /* ══════════════════════════════════════════════════
    FORMS (SHARED)
 ══════════════════════════════════════════════════ */
@@ -813,6 +982,17 @@ button,input,textarea { font-family:inherit; }
 
 @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
 
+@keyframes activityShimmer {
+  0%,30% { transform:translateX(-120%); }
+  70%,100% { transform:translateX(120%); }
+}
+
+@keyframes activityBurst {
+  0% { opacity:0; transform:scale(0.95); }
+  20% { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(1.06); }
+}
+
 /* ══════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════ */
@@ -829,6 +1009,12 @@ button,input,textarea { font-family:inherit; }
   .modal-box { padding:2rem 1.5rem; }
   .polaroid { width:155px; }
   .polaroid-row { gap:1rem 1.4rem; }
+  .activity-lock-mini { padding:0.68rem 0.7rem; }
+  .activity-lock-label { margin-bottom:0.45rem; font-size:0.46rem; }
+  .activity-lock-countdown { gap:0.28rem; }
+  .activity-lock-unit { padding:0.34rem 0.14rem; border-radius:9px; }
+  .activity-lock-unit strong { font-size:0.92rem; }
+  .activity-lock-unit small { letter-spacing:0.18em; }
 }
 @media (min-width:768px) {
   .section-wrap { padding:6.5rem 2rem; }
@@ -1286,6 +1472,26 @@ button,input,textarea { font-family:inherit; }
                     <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Colors</span></div>
                     <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Shiny Colorful / Slutty</span></div>
                     <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Disco Themed</span></div>
+                    <div class="reveal-row reveal-row--activity" data-activity-lock="day2" data-activity-effect="confetti">
+                      <span class="reveal-label">Activities</span>
+                      <div class="reveal-val activity-lock-shell">
+                        <div class="activity-lock-mini">
+                          <div class="activity-lock-label">🌴 Unlocks in</div>
+                          <div class="activity-lock-countdown" data-activity-countdown="day2">
+                            <div class="activity-lock-unit"><strong data-days>00</strong><small>Days</small></div>
+                            <div class="activity-lock-unit"><strong data-hours>00</strong><small>Hours</small></div>
+                            <div class="activity-lock-unit"><strong data-minutes>00</strong><small>Minutes</small></div>
+                            <div class="activity-lock-unit"><strong data-seconds>00</strong><small>Seconds</small></div>
+                          </div>
+                        </div>
+                        <div class="activity-lock-list">
+                          <span>Guess the Dress</span>
+                          <span>Kiss the Miss Goodbye</span>
+                          <span>Dates Jar</span>
+                          <span>Bridal Advice Card</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1331,7 +1537,7 @@ button,input,textarea { font-family:inherit; }
                   </div>
                 </div>
               </div>
-        <!-- 7. Grand Finale -->
+        <!-- 3c. Special Party -->
         <div class="polaroid-wrap rot-8" onclick="togglePolaroid(this)">
                 <div class="polaroid-pin"></div>
                 <div class="polaroid-string"></div>
@@ -1344,7 +1550,29 @@ button,input,textarea { font-family:inherit; }
                     <div class="reveal-row"><span class="reveal-label">Time</span><span class="reveal-val">12:00 AM</span></div>
                     <div class="reveal-row"><span class="reveal-label">Location</span><span class="reveal-val">Garden El Shaleh</span></div>
                     <div class="reveal-row"><span class="reveal-label">Dress Code</span><span class="reveal-val">Black + Shiny</span></div>
-                    <div class="reveal-row"><span class="reveal-label">Description</span><span class="reveal-val">Special Party</span></div>
+                    <div class="reveal-row">
+                      <span class="reveal-label">Description</span>
+                      <span class="reveal-val">Special Party</span>
+                    </div>
+                    <div class="reveal-row reveal-row--activity" data-activity-lock="day3" data-activity-effect="shimmer">
+                      <span class="reveal-label">Activities</span>
+                      <div class="reveal-val activity-lock-shell">
+                        <div class="activity-lock-mini">
+                          <div class="activity-lock-label">🌊 Unlocks in</div>
+                          <div class="activity-lock-countdown" data-activity-countdown="day3">
+                            <div class="activity-lock-unit"><strong data-days>00</strong><small>Days</small></div>
+                            <div class="activity-lock-unit"><strong data-hours>00</strong><small>Hours</small></div>
+                            <div class="activity-lock-unit"><strong data-minutes>00</strong><small>Minutes</small></div>
+                            <div class="activity-lock-unit"><strong data-seconds>00</strong><small>Seconds</small></div>
+                          </div>
+                        </div>
+                        <div class="activity-lock-list">
+                          <span>Rings Hunt</span>
+                          <span>Bubuka and Bulaklak</span>
+                          <span>Don't Get Caught on Camera</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1523,14 +1751,57 @@ button,input,textarea { font-family:inherit; }
 
 /* ── COUNTDOWN ── */
 const WEDDING = new Date('2026-10-07T00:00:00');
+const ACTIVITY_LOCKS = [
+  { key:'day2', target:new Date(2026, 7, 7, 14, 0, 0), rowSelector:'[data-activity-lock="day2"]', effect:'confetti' },
+  { key:'day3', target:new Date(2026, 7, 8, 17, 0, 0), rowSelector:'[data-activity-lock="day3"]', effect:'shimmer' }
+];
+
 function pad(n){ return String(n).padStart(2,'0'); }
+
+function updateActivityLock(lock){
+  const row = document.querySelector(lock.rowSelector);
+  if(!row) return;
+
+  const diff = lock.target.getTime() - Date.now();
+  const digits = {
+    days: Math.max(0, Math.floor(diff / 86400000)),
+    hours: Math.max(0, Math.floor(diff % 86400000 / 3600000)),
+    minutes: Math.max(0, Math.floor(diff % 3600000 / 60000)),
+    seconds: Math.max(0, Math.floor(diff % 60000 / 1000))
+  };
+
+  if(diff <= 0){
+    if(!row.classList.contains('activity-unlocked')){
+      row.classList.add('activity-unlocked', lock.effect === 'confetti' ? 'activity-effect-confetti' : 'activity-effect-shimmer');
+      setTimeout(() => row.classList.remove('activity-effect-confetti', 'activity-effect-shimmer'), 1400);
+    }
+    return;
+  }
+
+  const set = (selector, value) => {
+    const el = row.querySelector(selector);
+    if(el) el.textContent = pad(value);
+  };
+
+  set('[data-days]', digits.days);
+  set('[data-hours]', digits.hours);
+  set('[data-minutes]', digits.minutes);
+  set('[data-seconds]', digits.seconds);
+}
+
+function updateActivityLocks(){
+  ACTIVITY_LOCKS.forEach(updateActivityLock);
+}
+
 function tick(){
   const diff = WEDDING - Date.now();
-  if(diff<=0) return;
-  const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000),m=Math.floor(diff%3600000/60000),s=Math.floor(diff%60000/1000);
-  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=pad(v); };
-  set('cd-d',d);set('cd-h',h);set('cd-m',m);set('cd-s',s);
-  set('fcd-d',d);set('fcd-h',h);set('fcd-m',m);set('fcd-s',s);
+  if(diff>0){
+    const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000),m=Math.floor(diff%3600000/60000),s=Math.floor(diff%60000/1000);
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=pad(v); };
+    set('cd-d',d);set('cd-h',h);set('cd-m',m);set('cd-s',s);
+    set('fcd-d',d);set('fcd-h',h);set('fcd-m',m);set('fcd-s',s);
+  }
+  updateActivityLocks();
 }
 tick(); setInterval(tick,1000);
 
