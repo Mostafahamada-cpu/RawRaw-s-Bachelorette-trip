@@ -133,15 +133,23 @@ button,input,textarea { font-family:inherit; }
   to   { transform:scale(1.03); }
 }
 
-/* Dark gradient overlay */
+/* Dark gradient overlay — warm luxury feel */
 .hero-overlay {
   position:absolute; inset:0; z-index:2;
   background:
+    /* Soft radial darkening behind center content */
+    radial-gradient(ellipse 60% 50% at 50% 48%,
+      rgba(8,6,4,0.38) 0%,
+      transparent 70%
+    ),
+    /* Main vertical gradient with warm black/brown tones */
     linear-gradient(180deg,
-      rgba(4,12,22,0.52) 0%,
-      rgba(8,20,35,0.28) 35%,
-      rgba(12,25,40,0.35) 60%,
-      rgba(6,14,24,0.72) 100%
+      rgba(12,8,4,0.62) 0%,
+      rgba(18,12,6,0.30) 22%,
+      rgba(22,16,10,0.22) 40%,
+      rgba(18,14,8,0.28) 58%,
+      rgba(12,8,4,0.48) 78%,
+      rgba(8,4,2,0.74) 100%
     );
 }
 
@@ -191,8 +199,9 @@ button,input,textarea { font-family:inherit; }
 
 .hero-eyebrow {
   font-size:0.62rem; font-weight:300;
-  letter-spacing:0.6em; color:rgba(220,190,130,0.82);
+  letter-spacing:0.6em; color:rgba(220,190,130,0.88);
   text-transform:uppercase; margin-bottom:1.8rem;
+  text-shadow:0 1px 12px rgba(0,0,0,0.4);
   opacity:0; animation:fadeUp 1.2s 0.4s ease forwards;
 }
 
@@ -204,7 +213,7 @@ button,input,textarea { font-family:inherit; }
   color:#ffffff;
   line-height:0.88;
   letter-spacing:0.01em;
-  text-shadow:0 4px 32px rgba(0,0,0,0.45), 0 0 80px rgba(200,168,106,0.2);
+  text-shadow:0 4px 36px rgba(0,0,0,0.55), 0 2px 16px rgba(0,0,0,0.3), 0 0 80px rgba(200,168,106,0.2);
   opacity:0; animation:fadeUp 1.4s 0.7s ease forwards;
 }
 
@@ -212,8 +221,9 @@ button,input,textarea { font-family:inherit; }
   font-family:'Cormorant Garamond',serif;
   font-size:clamp(1rem,3.5vw,1.45rem);
   font-weight:300; font-style:italic;
-  color:rgba(255,255,255,0.65);
+  color:rgba(255,255,255,0.72);
   margin-top:1.4rem; letter-spacing:0.08em;
+  text-shadow:0 2px 16px rgba(0,0,0,0.45);
   opacity:0; animation:fadeUp 1.3s 1.0s ease forwards;
 }
 
@@ -230,7 +240,7 @@ button,input,textarea { font-family:inherit; }
   font-weight:400; font-style:italic;
   color:var(--gold-light);
   letter-spacing:0.3em; text-transform:uppercase;
-  text-shadow:0 0 60px rgba(200,168,106,0.5);
+  text-shadow:0 0 60px rgba(200,168,106,0.5), 0 2px 14px rgba(0,0,0,0.35);
   opacity:0; animation:fadeUp 1.4s 1.3s ease forwards;
 }
 
@@ -238,8 +248,9 @@ button,input,textarea { font-family:inherit; }
 .countdown-wrap { margin-top:2.8rem; opacity:0; animation:fadeUp 1.2s 1.6s ease forwards; text-align:center; }
 .countdown-label {
   font-size:0.6rem; letter-spacing:0.3em;
-  color:rgba(255,255,255,0.5); text-transform:uppercase; margin-bottom:1.2rem;
+  color:rgba(255,255,255,0.58); text-transform:uppercase; margin-bottom:1.2rem;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  text-shadow:0 1px 8px rgba(0,0,0,0.3);
 }
 @media (max-width:380px){
   .countdown-label { font-size:0.5rem; letter-spacing:0.18em; }
@@ -586,27 +597,48 @@ button,input,textarea { font-family:inherit; }
   align-items:start;
 }
 
+.reveal-row--activity .reveal-val {
+  width:100%;
+  max-width:100%;
+}
+
 .activity-lock-shell {
   position:relative;
+  width:100%;
+  max-width:100%;
+  margin:0 auto;
+  min-height:0;
   display:flex;
   flex-direction:column;
-  gap:0.55rem;
-  width:100%;
+  align-items:center;
+  justify-content:flex-start;
+  gap:0.45rem;
+  padding:0;
+  isolation:isolate;
+  box-sizing:border-box;
 }
 
 .activity-lock-mini {
   position:relative;
   overflow:hidden;
-  border-radius:14px;
-  padding:0.72rem 0.8rem;
-  border:1px solid rgba(255,255,255,0.5);
+  width:100%;
+  max-width:100%;
+  border-radius:28px;
+  padding:20px 22px;
+  border:1px solid rgba(255,255,255,0.55);
   background:
-    linear-gradient(145deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.18) 100%),
-    linear-gradient(135deg, rgba(72,150,176,0.10) 0%, rgba(200,168,106,0.12) 55%, rgba(255,189,145,0.14) 100%);
-  box-shadow:0 10px 30px rgba(26,77,101,0.08), inset 0 1px 0 rgba(255,255,255,0.45);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  transition:opacity 0.55s ease, transform 0.55s ease, max-height 0.65s ease, padding 0.55s ease, margin 0.55s ease;
+    linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.55) 100%),
+    linear-gradient(135deg, rgba(72,150,176,0.07) 0%, rgba(200,168,106,0.10) 52%, rgba(255,189,145,0.10) 100%);
+  box-shadow:
+    0 18px 44px rgba(26,77,101,0.08),
+    0 6px 16px rgba(200,168,106,0.08),
+    0 0 28px rgba(200,168,106,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.7);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  transform-origin:center;
+  animation:activityFloat 6.5s ease-in-out infinite;
+  transition:opacity 0.8s ease, transform 0.8s ease, box-shadow 0.8s ease, filter 0.8s ease;
 }
 
 .activity-lock-mini::before,
@@ -617,31 +649,36 @@ button,input,textarea { font-family:inherit; }
 }
 
 .activity-lock-mini::before {
-  inset:0;
-  background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.10) 32%, rgba(255,255,255,0.30) 50%, rgba(255,255,255,0.08) 68%, transparent 100%);
+  inset:-2px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.82) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 82% 22%, rgba(255,255,255,0.68) 0 1.5px, transparent 2.5px),
+    linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.10) 32%, rgba(255,255,255,0.34) 50%, rgba(255,255,255,0.10) 68%, transparent 100%);
   transform:translateX(-120%);
   animation:activityShimmer 4.8s ease-in-out infinite;
 }
 
 .activity-lock-mini::after {
-  right:0.55rem;
-  bottom:0.45rem;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9) 0 1.2px, transparent 2px),
-    radial-gradient(circle at 65% 30%, rgba(255,255,255,0.65) 0 1px, transparent 1.8px),
-    radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%);
-  opacity:0.7;
+  left:1rem;
+  bottom:0.9rem;
+  width:38px;
+  height:22px;
+  border-radius:50% 50% 40% 40%;
+  border:1px solid rgba(255,255,255,0.45);
+  background:linear-gradient(180deg, rgba(255,241,226,0.72), rgba(237,210,176,0.22));
+  transform:rotate(-12deg);
+  box-shadow:0 10px 24px rgba(200,168,106,0.16);
+  opacity:0.9;
+  clip-path:polygon(50% 0%, 100% 52%, 50% 100%, 0 52%);
 }
 
 .activity-lock-label {
   display:flex;
   align-items:center;
-  gap:0.45rem;
-  margin-bottom:0.55rem;
-  font-size:0.5rem;
+  justify-content:center;
+  gap:0.5rem;
+  margin-bottom:0.9rem;
+  font-size:clamp(0.55rem, 1vw, 0.72rem);
   letter-spacing:0.32em;
   text-transform:uppercase;
   color:var(--ocean-mid);
@@ -649,8 +686,8 @@ button,input,textarea { font-family:inherit; }
 
 .activity-lock-label::before {
   content:'';
-  width:7px;
-  height:7px;
+  width:8px;
+  height:8px;
   border-radius:50%;
   background:linear-gradient(180deg,var(--sunset-light),var(--gold));
   box-shadow:0 0 0 5px rgba(255,255,255,0.18);
@@ -658,79 +695,117 @@ button,input,textarea { font-family:inherit; }
 }
 
 .activity-lock-countdown {
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:0.35rem;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:stretch;
+  gap:10px;
+  width:100%;
 }
 
 .activity-lock-unit {
+  position:relative;
   text-align:center;
-  padding:0.4rem 0.2rem;
-  border-radius:10px;
-  background:rgba(255,255,255,0.48);
-  border:1px solid rgba(255,255,255,0.55);
+  flex:1 1 clamp(60px, 20vw, 96px);
+  min-width:60px;
+  max-width:100%;
+  padding:14px 10px 12px;
+  border-radius:18px;
+  background:rgba(255,255,255,0.68);
+  border:1px solid rgba(255,255,255,0.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px rgba(26,77,101,0.04);
+  overflow:hidden;
 }
 
 .activity-lock-unit strong {
   display:block;
   font-family:'Playfair Display',serif;
-  font-size:1rem;
-  font-weight:400;
+  font-size:clamp(1.65rem, 5.4vw, 2.4rem);
+  font-weight:600;
   line-height:1;
+  letter-spacing:-0.03em;
+  font-variant-numeric:tabular-nums;
   color:var(--ocean);
+  transition:transform 0.28s ease, text-shadow 0.28s ease, color 0.28s ease;
 }
 
 .activity-lock-unit small {
   display:block;
-  margin-top:0.25rem;
-  font-size:0.35rem;
+  margin-top:0.4rem;
+  font-size:clamp(0.38rem, 0.95vw, 0.5rem);
   letter-spacing:0.24em;
   text-transform:uppercase;
   color:var(--text-light);
 }
 
+.activity-lock-unit.is-bumping strong {
+  transform:translateY(-2px) scale(1.06);
+  text-shadow:0 0 18px rgba(200,168,106,0.18);
+}
+
 .activity-lock-list {
   display:flex;
   flex-direction:column;
-  gap:0.22rem;
+  align-items:center;
+  justify-content:center;
+  gap:0.28rem;
   opacity:0;
   max-height:0;
   overflow:hidden;
-  transform:translateY(8px);
-  transition:opacity 0.55s ease, transform 0.55s ease, max-height 0.7s ease;
+  transform:translateY(12px) scale(0.97);
+  transition:opacity 0.7s ease, transform 0.7s ease, max-height 0.8s ease;
+  text-align:center;
+  width:100%;
 }
 
 .activity-lock-list span {
   font-family:'Cormorant Garamond',serif;
-  font-size:0.8rem;
+  font-size:clamp(0.78rem, 2vw, 0.95rem);
   color:var(--text-mid);
   line-height:1.35;
+  opacity:0;
+  transform:translateY(18px) scale(0.97);
 }
 
 .reveal-row.activity-unlocked .activity-lock-mini {
   opacity:0;
-  transform:translateY(-8px);
+  transform:translateY(8px) scale(0.95);
   max-height:0;
-  margin:0;
   padding-top:0;
   padding-bottom:0;
+  margin-bottom:0;
   border-width:0;
+  filter:saturate(1.08) brightness(1.03);
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+
+.reveal-row.activity-unlocked .activity-lock-shell {
+  min-height:0;
 }
 
 .reveal-row.activity-unlocked .activity-lock-list {
   opacity:1;
-  max-height:140px;
-  transform:translateY(0);
+  max-height:220px;
+  transform:translateY(0) scale(1);
 }
+
+.reveal-row.activity-unlocked .activity-lock-list span {
+  animation:activityItemIn 0.72s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+.reveal-row.activity-unlocked .activity-lock-list span:nth-child(1) { animation-delay:0.12s; }
+.reveal-row.activity-unlocked .activity-lock-list span:nth-child(2) { animation-delay:0.24s; }
+.reveal-row.activity-unlocked .activity-lock-list span:nth-child(3) { animation-delay:0.36s; }
+.reveal-row.activity-unlocked .activity-lock-list span:nth-child(4) { animation-delay:0.48s; }
 
 .reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after,
 .reveal-row.activity-unlocked.activity-effect-shimmer .activity-lock-shell::after {
   content:'';
   position:absolute;
-  inset:-10px;
+  inset:-12px;
   pointer-events:none;
-  border-radius:18px;
-  animation:activityBurst 1.25s ease forwards;
+  border-radius:24px;
+  animation:activityBurst 1.55s ease forwards;
 }
 
 .reveal-row.activity-unlocked.activity-effect-confetti .activity-lock-shell::after {
@@ -749,6 +824,73 @@ button,input,textarea { font-family:inherit; }
     radial-gradient(circle at 64% 30%, rgba(255,255,255,0.9) 0 2px, transparent 3px),
     radial-gradient(circle at 84% 18%, rgba(200,168,106,0.86) 0 2px, transparent 4px),
     radial-gradient(circle at 54% 56%, rgba(72,150,176,0.82) 0 2px, transparent 4px);
+}
+
+.reveal-row.activity-unlocked .activity-lock-shell::before {
+  content:'';
+  position:absolute;
+  inset:-8px;
+  border-radius:28px;
+  background:radial-gradient(circle at center, rgba(200,168,106,0.24) 0%, rgba(200,168,106,0.08) 28%, transparent 62%);
+  opacity:0;
+  animation:activityGlow 1.4s ease forwards;
+  pointer-events:none;
+  z-index:-1;
+}
+
+.reveal-row.activity-unlocked .activity-lock-mini::before {
+  animation:activityShimmer 1.4s ease forwards;
+}
+
+.reveal-row.activity-unlocked .activity-lock-mini::after {
+  animation:activityRipple 1.4s ease forwards;
+}
+
+.activity-particle-layer {
+  position:absolute;
+  inset:-12px;
+  pointer-events:none;
+  overflow:visible;
+}
+
+.activity-particle {
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  opacity:0;
+  transform:translate(-50%, -50%) scale(0.55);
+  animation:activityParticle 1.45s ease forwards;
+  will-change:transform, opacity;
+}
+
+.activity-particle--sparkle {
+  color:#F0C96C;
+  font-size:1.05rem;
+  text-shadow:0 0 14px rgba(240,201,108,0.36);
+}
+
+.activity-particle--bubble {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.82);
+  box-shadow:0 0 10px rgba(255,255,255,0.28);
+}
+
+.activity-particle--petal {
+  width:10px;
+  height:14px;
+  border-radius:70% 30% 70% 30%;
+  background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,233,242,0.7));
+  transform:translate(-50%, -50%) rotate(35deg) scale(0.55);
+}
+
+.activity-particle--shell {
+  width:11px;
+  height:11px;
+  border-radius:50% 50% 45% 45%;
+  border:1px solid rgba(255,255,255,0.8);
+  background:linear-gradient(180deg, rgba(255,245,235,0.96), rgba(234,214,183,0.68));
 }
 
 /* ══════════════════════════════════════════════════
@@ -993,6 +1135,34 @@ button,input,textarea { font-family:inherit; }
   100% { opacity:0; transform:scale(1.06); }
 }
 
+@keyframes activityFloat {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-5px); }
+}
+
+@keyframes activityItemIn {
+  0% { opacity:0; transform:translateY(18px) scale(0.97); }
+  100% { opacity:1; transform:translateY(0) scale(1); }
+}
+
+@keyframes activityGlow {
+  0% { opacity:0; transform:scale(0.92); }
+  30% { opacity:1; }
+  100% { opacity:0; transform:scale(1.08); }
+}
+
+@keyframes activityRipple {
+  0% { opacity:0; transform:scale(0.96); }
+  18% { opacity:0.82; }
+  100% { opacity:0; transform:scale(1.1); }
+}
+
+@keyframes activityParticle {
+  0% { opacity:0; transform:translate(-50%, -50%) scale(0.35) rotate(0deg); }
+  15% { opacity:1; }
+  100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); }
+}
+
 /* ══════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════ */
@@ -1009,12 +1179,14 @@ button,input,textarea { font-family:inherit; }
   .modal-box { padding:2rem 1.5rem; }
   .polaroid { width:155px; }
   .polaroid-row { gap:1rem 1.4rem; }
-  .activity-lock-mini { padding:0.68rem 0.7rem; }
-  .activity-lock-label { margin-bottom:0.45rem; font-size:0.46rem; }
-  .activity-lock-countdown { gap:0.28rem; }
-  .activity-lock-unit { padding:0.34rem 0.14rem; border-radius:9px; }
-  .activity-lock-unit strong { font-size:0.92rem; }
-  .activity-lock-unit small { letter-spacing:0.18em; }
+  .activity-lock-shell { gap:0.7rem; }
+  .activity-lock-mini { padding:16px 14px; border-radius:24px; }
+  .activity-lock-label { margin-bottom:0.65rem; font-size:0.52rem; letter-spacing:0.26em; }
+  .activity-lock-countdown { gap:8px; }
+  .activity-lock-unit { flex:1 1 calc(50% - 8px); min-width:0; padding:12px 8px 10px; border-radius:15px; }
+  .activity-lock-unit strong { font-size:clamp(1.3rem, 7.5vw, 1.75rem); }
+  .activity-lock-unit small { letter-spacing:0.18em; font-size:0.36rem; }
+  .activity-lock-list span { font-size:0.84rem; }
 }
 @media (min-width:768px) {
   .section-wrap { padding:6.5rem 2rem; }
@@ -1758,6 +1930,49 @@ const ACTIVITY_LOCKS = [
 
 function pad(n){ return String(n).padStart(2,'0'); }
 
+function bumpCountdownUnit(unit){
+  if(!unit) return;
+  unit.classList.remove('is-bumping');
+  requestAnimationFrame(() => {
+    unit.classList.add('is-bumping');
+    window.setTimeout(() => unit.classList.remove('is-bumping'), 260);
+  });
+}
+
+function launchActivityBurst(row, effect){
+  const shell = row.querySelector('.activity-lock-shell');
+  if(!shell) return;
+
+  const layer = document.createElement('div');
+  layer.className = 'activity-particle-layer';
+  shell.appendChild(layer);
+
+  const particleTypes = effect === 'shimmer'
+    ? ['sparkle', 'sparkle', 'shell', 'petal', 'bubble']
+    : ['sparkle', 'bubble', 'shell', 'petal', 'sparkle'];
+  const sparkleGlyphs = ['✦', '✧', '✺', '❈'];
+
+  for(let i = 0; i < 14; i++){
+    const particle = document.createElement('span');
+    const type = particleTypes[i % particleTypes.length];
+    particle.className = `activity-particle activity-particle--${type}`;
+    particle.style.setProperty('--x', `${14 + Math.random() * 72}%`);
+    particle.style.setProperty('--y', `${18 + Math.random() * 56}%`);
+    particle.style.setProperty('--dx', `${(Math.random() * 2 - 1) * 92}px`);
+    particle.style.setProperty('--dy', `${-28 - Math.random() * 92}px`);
+    particle.style.setProperty('--rot', `${(Math.random() * 240 - 120).toFixed(1)}deg`);
+    particle.style.animationDelay = `${Math.random() * 0.18}s`;
+
+    if(type === 'sparkle'){
+      particle.textContent = sparkleGlyphs[Math.floor(Math.random() * sparkleGlyphs.length)];
+    }
+
+    layer.appendChild(particle);
+  }
+
+  window.setTimeout(() => layer.remove(), 1650);
+}
+
 function updateActivityLock(lock){
   const row = document.querySelector(lock.rowSelector);
   if(!row) return;
@@ -1772,21 +1987,27 @@ function updateActivityLock(lock){
 
   if(diff <= 0){
     if(!row.classList.contains('activity-unlocked')){
-      row.classList.add('activity-unlocked', lock.effect === 'confetti' ? 'activity-effect-confetti' : 'activity-effect-shimmer');
-      setTimeout(() => row.classList.remove('activity-effect-confetti', 'activity-effect-shimmer'), 1400);
+      requestAnimationFrame(() => {
+        row.classList.add('activity-unlocked', lock.effect === 'confetti' ? 'activity-effect-confetti' : 'activity-effect-shimmer');
+        launchActivityBurst(row, lock.effect);
+      });
+      window.setTimeout(() => row.classList.remove('activity-effect-confetti', 'activity-effect-shimmer'), 1700);
     }
     return;
   }
 
-  const set = (selector, value) => {
+  const setAndBump = (selector, value) => {
     const el = row.querySelector(selector);
-    if(el) el.textContent = pad(value);
+    if(el){
+      el.textContent = pad(value);
+      bumpCountdownUnit(el.closest('.activity-lock-unit'));
+    }
   };
 
-  set('[data-days]', digits.days);
-  set('[data-hours]', digits.hours);
-  set('[data-minutes]', digits.minutes);
-  set('[data-seconds]', digits.seconds);
+  setAndBump('[data-days]', digits.days);
+  setAndBump('[data-hours]', digits.hours);
+  setAndBump('[data-minutes]', digits.minutes);
+  setAndBump('[data-seconds]', digits.seconds);
 }
 
 function updateActivityLocks(){
