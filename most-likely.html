@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Who's Most Likely To? — Rowan's Bachelorette</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+
+<!-- Firebase — shared instance (same project used across the site) -->
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+    addDoc, onSnapshot, query, where, orderBy, writeBatch, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBuXqTJNnAwx5RmSEhdc3fdi7jMRAsyFaE",
+    authDomain: "rawraw-s-bachelorette-trip.firebaseapp.com",
+    projectId: "rawraw-s-bachelorette-trip",
+    storageBucket: "rawraw-s-bachelorette-trip.firebasestorage.app",
+    messagingSenderId: "222624011955",
+    appId: "1:222624011955:web:14086b4fa5b522ab80c2c6",
+    measurementId: "G-42HSGZ7EJN"
+  };
+
+  // Initialize once; if an app already exists, reuse it instead of re-initializing.
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Expose the single shared Firestore handle + helpers for the game logic script.
+  window._db = db;
+  window._fs = {
+    collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+    addDoc, onSnapshot, query, where, orderBy, writeBatch, serverTimestamp
+  };
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS — Mediterranean Beach
+══════════════════════════════════════════════════ */
+:root {
+  --bg:            #F7FCFF;
+  --bg-secondary:  #EDF8FB;
+  --bg-warm:       #F4F9FC;
+  --card:          rgba(255,255,255,0.75);
+  --border:        rgba(255,255,255,0.45);
+  --border-accent: rgba(92,184,214,0.25);
+  --text:          #29465B;
+  --text-secondary:#6B8798;
+  --text-faint:    #9CB4C2;
+  --accent:        #5CB8D6;
+  --ocean:         #7ED6E8;
+  --deep:          #3D7FA6;
+  --sand:          #F4E7D3;
+  --sand-dark:     #E4D2B8;
+  --coral:         #F5B8A8;
+  --coral-soft:    #FAD8D0;
+  --gold:          #D9B56D;
+  --gold-light:    #E8CE94;
+  --seafoam:       #B8E8DC;
+  --sky:           #C4E4F4;
+  --shadow-sm:     0 2px 12px rgba(41,70,91,0.04);
+  --shadow-md:     0 4px 28px rgba(41,70,91,0.05);
+  --shadow-lg:     0 8px 44px rgba(41,70,91,0.06);
+  --shadow-glow:   0 0 36px rgba(92,184,214,0.12);
+  --radius:        28px;
+  --radius-sm:     16px;
+  --radius-pill:   60px;
+  --blur:          30px;
+  --ease:          cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:    0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ══════════════════════════════════════════════════
+   RESET
+══════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+button { font-family: inherit; border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+a { text-decoration: none; color: inherit; }
+
+/* ══════════════════════════════════════════════════
+   AMBIENT BACKGROUND
+══════════════════════════════════════════════════ */
+.ambient {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 65% 45% at 30% 15%, rgba(126,214,232,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 50% at 70% 75%, rgba(92,184,214,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 50%, rgba(244,231,211,0.15) 0%, transparent 70%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-secondary) 45%, #E4F3F8 80%, var(--bg-warm) 100%);
+}
+
+/* Floating blurry circles */
+.amb-circle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(65px);
+  animation: ambDrift 22s ease-in-out infinite;
+}
+.amb-circle:nth-child(2) {
+  width: 320px; height: 320px;
+  top: -8%; left: -3%;
+  background: rgba(126,214,232,0.15);
+}
+.amb-circle:nth-child(3) {
+  width: 260px; height: 260px;
+  top: 35%; right: -6%;
+  background: rgba(92,184,214,0.1);
+  animation-delay: -8s; animation-duration: 28s;
+}
+.amb-circle:nth-child(4) {
+  width: 220px; height: 220px;
+  bottom: 5%; left: 8%;
+  background: rgba(244,231,211,0.2);
+  animation-delay: -14s; animation-duration: 25s;
+}
+.amb-circle:nth-child(5) {
+  width: 180px; height: 180px;
+  bottom: 25%; right: 12%;
+  background: rgba(184,232,220,0.12);
+  animation-delay: -4s; animation-duration: 30s;
+}
+@keyframes ambDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(12px, -18px) scale(1.04); }
+  66%      { transform: translate(-10px, 14px) scale(0.96); }
+}
+
+/* Sunlight effect */
+.sunlight {
+  position: fixed;
+  top: -15%; right: -10%;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,181,109,0.08) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+  filter: blur(40px);
+}
+
+/* Subtle wave at bottom */
+.wave-bg {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 120px;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.wave-bg svg {
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 200%; height: 100%;
+  animation: waveDrift 12s ease-in-out infinite;
+}
+@keyframes waveDrift {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-25%); }
+}
+
+/* Sparkle field */
+.sparkles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.sparkles i {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: sparkGlow 5s ease-in-out infinite;
+}
+@keyframes sparkGlow {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50%      { opacity: 0.35; transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE TRANSITION
+══════════════════════════════════════════════════ */
+.page-fade {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9999; pointer-events: none;
+  animation: fadeEntry 0.7s 0.15s ease forwards;
+}
+@keyframes fadeEntry { from { opacity: 1; } to { opacity: 0; } }
+
+/* ══════════════════════════════════════════════════
+   BACK LINK
+══════════════════════════════════════════════════ */
+.back-link {
+  position: fixed; top: 1.6rem; left: 1.6rem; z-index: 100;
+  display: flex; align-items: center; gap: 0.45rem;
+  font-size: 0.58rem; font-weight: 300;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+}
+.back-link:hover { color: var(--accent); }
+.back-link svg { width: 13px; height: 13px; opacity: 0.7; }
+
+/* ══════════════════════════════════════════════════
+   GLASS CARD
+══════════════════════════════════════════════════ */
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+.glass::before {
+  content: '';
+  position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent);
+}
+
+/* ══════════════════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════════════════ */
+.eyebrow {
+  font-size: 0.5rem; font-weight: 400;
+  letter-spacing: 0.55em; text-transform: uppercase;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 0.8rem;
+}
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 6.5vw, 2.6rem);
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.2;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.sec-title em { font-style: italic; color: var(--deep); }
+.body-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-weight: 300; font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  text-align: center;
+}
+
+/* Divider */
+.divider {
+  display: flex; align-items: center; gap: 1rem;
+  max-width: 120px; margin: 1rem auto 1.6rem;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; }
+.divider::before { background: linear-gradient(90deg, transparent, var(--ocean)); }
+.divider::after  { background: linear-gradient(90deg, var(--ocean), transparent); }
+.divider-dot { width: 3px; height: 3px; background: var(--accent); border-radius: 50%; }
+
+/* ══════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════ */
+.btn-primary {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 1rem 3rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--ocean) 50%, var(--accent) 100%);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.65rem; font-weight: 400;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.1s;
+}
+.btn-primary:disabled {
+  opacity: 0.4; cursor: not-allowed;
+  transform: none; box-shadow: var(--shadow-sm);
+}
+
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2.2rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--sky);
+  border-radius: var(--radius-pill);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem; font-weight: 300;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  transition: all var(--transition);
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(92,184,214,0.04);
+}
+
+/* Ripple */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: scale(0);
+  animation: rippleOut 0.55s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes rippleOut { to { transform: scale(3.5); opacity: 0; } }
+
+/* Water ripple (for voting) */
+.water-ripple {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid rgba(92,184,214,0.35);
+  transform: scale(0); opacity: 1;
+  animation: waterExpand 0.8s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes waterExpand {
+  0%  { transform: scale(0); opacity: 0.7; }
+  100%{ transform: scale(3); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   SCREENS
+══════════════════════════════════════════════════ */
+.screen {
+  display: none;
+  width: 100%; min-height: 100vh;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4rem 1.5rem 3rem;
+  position: relative; z-index: 1;
+}
+.screen.active { display: flex; }
+.screen-inner { width: 100%; max-width: 520px; text-align: center; }
+.screen-enter { animation: screenIn 0.5s var(--ease) forwards; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════
+   WELCOME
+══════════════════════════════════════════════════ */
+.welcome-card { padding: 3.5rem 2.4rem 3rem; }
+.welcome-bride {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; font-weight: 400;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-bottom: 1.4rem;
+}
+.bride-crown { font-size: 0.7rem; }
+
+/* Bride shimmer */
+.bride-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.bride-shimmer::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(217,181,109,0.2), transparent);
+  animation: brideShimmer 4s ease-in-out infinite;
+}
+@keyframes brideShimmer {
+  0%   { left: -100%; }
+  50%  { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* ══════════════════════════════════════════════════
+   PLAYERS — Premium Profile Cards
+══════════════════════════════════════════════════ */
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+@media (min-width: 600px) { .players-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .players-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.player-card {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.7rem;
+  padding: 1.6rem 0.8rem 1.3rem;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+  position: relative; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.player-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(92,184,214,0.22);
+  transform: translateY(-3px);
+}
+.player-card.selected {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.85);
+  box-shadow: var(--shadow-lg), 0 0 28px rgba(92,184,214,0.12);
+  transform: translateY(-5px);
+}
+.player-card.selected .player-avatar-wrap {
+  box-shadow: 0 0 0 3px var(--accent), 0 0 22px rgba(92,184,214,0.18);
+}
+.player-card.is-bride .player-avatar-wrap {
+  box-shadow: 0 0 0 2.5px var(--gold-light), 0 0 18px rgba(217,181,109,0.12);
+}
+.player-card.is-bride.selected {
+  border-color: var(--gold);
+}
+.player-card.is-bride.selected .player-avatar-wrap {
+  box-shadow: 0 0 0 3px var(--gold), 0 0 22px rgba(217,181,109,0.22);
+}
+
+/* Avatar wrapper */
+.player-avatar-wrap {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  position: relative;
+  flex-shrink: 0;
+}
+.player-avatar-wrap img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.player-avatar-initials {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem; font-weight: 500;
+  border-radius: 50%;
+}
+
+/* Bride crown badge */
+.player-crown {
+  position: absolute; top: -2px; right: -2px;
+  font-size: 0.85rem; z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(217,181,109,0.4));
+  animation: crownFloat 3s ease-in-out infinite;
+}
+@keyframes crownFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Bride shimmer on avatar */
+.player-card.is-bride .player-avatar-wrap::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(217,181,109,0.25), transparent);
+  animation: brideAvatarShimmer 3.5s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 50%;
+}
+@keyframes brideAvatarShimmer {
+  0%   { left: -100%; }
+  50%  { left: 200%; }
+  100% { left: 200%; }
+}
+
+.player-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.82rem; font-weight: 400;
+  color: var(--text); line-height: 1.3;
+  text-align: center;
+}
+.player-bride-label {
+  font-size: 0.48rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--gold);
+  font-weight: 400; margin-top: -0.2rem;
+}
+
+/* Checkmark overlay */
+.player-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: scale(0.3);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 3;
+}
+.player-card.is-bride .player-check { background: var(--gold); }
+.player-card.selected .player-check {
+  opacity: 1; transform: scale(1);
+}
+.player-check svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2.5; fill: none; }
+
+.select-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-weight: 300; font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: 1.8rem;
+}
+
+/* Playing-as bar */
+.playing-as-bar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.2rem;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  position: fixed; top: 1rem; right: 1rem; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.playing-as-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.playing-as-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.playing-as-avatar .pa-initials {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.55rem; font-weight: 500;
+  border-radius: 50%;
+}
+.playing-as-text {
+  font-size: 0.55rem; font-weight: 300;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.playing-as-name {
+  font-weight: 400; color: var(--text);
+}
+
+/* ══════════════════════════════════════════════════
+   PROGRESS
+══════════════════════════════════════════════════ */
+.progress-wrap { width: 100%; margin-bottom: 1.2rem; }
+.progress-track {
+  width: 100%; height: 2px;
+  background: var(--sky); border-radius: 2px;
+  overflow: hidden; margin-bottom: 0.7rem;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ocean), var(--accent), var(--deep));
+  border-radius: 2px;
+  transition: width 0.6s var(--ease);
+}
+.progress-label {
+  font-size: 0.55rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--text-faint);
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════
+   QUESTION
+══════════════════════════════════════════════════ */
+.question-card { padding: 3rem 2.2rem 2.6rem; margin-bottom: 1.8rem; }
+.question-prefix {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem; font-style: italic;
+  color: var(--text-faint); margin-bottom: 0.5rem;
+}
+.question-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 4.5vw, 1.8rem);
+  font-weight: 500; color: var(--text);
+  line-height: 1.35; letter-spacing: 0.01em;
+}
+
+/* Vote cards */
+.vote-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+.vote-card {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: 0.85rem 1.1rem;
+  background: var(--card);
+  backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.vote-card:hover:not(.locked) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(92,184,214,0.2);
+}
+.vote-card.chosen {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.9);
+  box-shadow: var(--shadow-md), 0 0 20px rgba(92,184,214,0.08);
+}
+.vote-card.chosen .vote-avatar {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 14px rgba(92,184,214,0.15);
+}
+.vote-card.locked { cursor: default; opacity: 0.4; transform: none; }
+.vote-card.chosen.locked { opacity: 1; }
+
+.vote-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem; font-weight: 500;
+  flex-shrink: 0; transition: all var(--transition);
+  overflow: hidden;
+  border: 1.5px solid rgba(92,184,214,0.1);
+}
+.vote-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.vote-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem; font-weight: 400;
+  color: var(--text); text-align: left; flex: 1;
+}
+.vote-bride-tag { font-size: 0.5rem; color: var(--gold); margin-left: 0.3rem; }
+.vote-submitted {
+  width: 100%;
+  font-size: 0.5rem; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-top: 0.3rem; padding-left: calc(40px + 1rem);
+  text-align: left;
+}
+
+/* Vote count badge */
+.vote-count-badge {
+  display: inline-block; margin-bottom: 1.2rem; padding: 0.35rem 1.1rem;
+  background: rgba(92,184,214,0.08); border: 1px solid rgba(92,184,214,0.18);
+  border-radius: var(--radius-pill);
+  font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--deep); text-align: center;
+}
+.vote-count-badge-wrap { text-align: center; }
+
+/* Heart burst */
+.heart-burst { position: absolute; pointer-events: none; z-index: 10; }
+.heart-particle {
+  position: absolute; font-size: 0.6rem;
+  animation: heartDrift 0.7s ease-out forwards;
+}
+@keyframes heartDrift {
+  0%   { opacity: 0.7; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--hx), var(--hy)) scale(0.3); }
+}
+
+/* ══════════════════════════════════════════════════
+   RESULTS
+══════════════════════════════════════════════════ */
+.results-card { padding: 2.4rem 2rem 2rem; }
+.results-question {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; font-style: italic;
+  color: var(--text-faint); margin-bottom: 2rem;
+}
+
+.vote-bars { margin-bottom: 2rem; }
+.vote-bar-row {
+  display: flex; align-items: center; gap: 0.7rem;
+  margin-bottom: 0.9rem; padding: 0.5rem 0;
+  transition: all var(--transition);
+}
+.vote-bar-row:last-child { margin-bottom: 0; }
+.vote-bar-row.winner {
+  transform: translateY(-1px);
+  position: relative;
+}
+.vote-bar-row.winner::before {
+  content: '👑'; position: absolute;
+  top: -0.5rem; left: 0.4rem; font-size: 0.65rem;
+}
+.vote-bar-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.7rem; font-weight: 500;
+  flex-shrink: 0; overflow: hidden;
+  border: 1px solid rgba(92,184,214,0.08);
+}
+.vote-bar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.vote-bar-info { flex: 1; min-width: 0; }
+.vote-bar-name {
+  font-size: 0.75rem; font-weight: 400;
+  color: var(--text); margin-bottom: 0.25rem; text-align: left;
+}
+.vote-bar-track {
+  width: 100%; height: 5px;
+  background: var(--sky); border-radius: 5px;
+  overflow: hidden;
+}
+.vote-bar-fill {
+  height: 100%; border-radius: 5px; width: 0;
+  background: linear-gradient(90deg, var(--ocean), var(--accent));
+  transition: width 0.9s var(--ease);
+}
+.vote-bar-row.winner .vote-bar-fill {
+  background: linear-gradient(90deg, var(--accent), var(--deep));
+}
+.vote-bar-pct {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.8rem; color: var(--deep);
+  min-width: 34px; text-align: right; flex-shrink: 0;
+}
+
+/* Unanimous */
+.unanimous-banner {
+  display: none;
+  padding: 0.9rem 1.2rem;
+  background: rgba(92,184,214,0.06);
+  border: 1px solid rgba(92,184,214,0.15);
+  border-radius: 14px; margin-bottom: 1.4rem;
+}
+.unanimous-banner.show { display: block; animation: softPop 0.4s ease; }
+@keyframes softPop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.unanimous-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-style: italic; color: var(--deep);
+}
+
+/* Loading */
+.loading-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(247,252,255,0.75);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 1rem;
+}
+.loading-overlay.show { display: flex; }
+.loading-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--sky);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; font-style: italic; color: var(--text-faint);
+}
+
+/* ══════════════════════════════════════════════════
+   AWARDS
+══════════════════════════════════════════════════ */
+.awards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 0.8rem; margin-bottom: 2.2rem;
+}
+.award-card {
+  padding: 1.6rem 0.8rem 1.4rem; text-align: center;
+  opacity: 0; transform: translateY(12px);
+  animation: awardIn 0.45s ease forwards;
+}
+@keyframes awardIn { to { opacity: 1; transform: translateY(0); } }
+.award-emoji { font-size: 1.6rem; display: block; margin-bottom: 0.5rem; }
+.award-title {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem; font-weight: 400;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 0.4rem;
+}
+.award-winner {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-weight: 400; font-style: italic;
+  color: var(--text); margin-bottom: 0.2rem;
+}
+.award-votes {
+  font-size: 0.5rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--text-faint);
+}
+
+/* ══════════════════════════════════════════════════
+   BRIDE'S ANSWERS
+══════════════════════════════════════════════════ */
+.bride-list { margin-bottom: 2.2rem; }
+.bride-row {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(196,228,244,0.4);
+  text-align: left;
+  opacity: 0; transform: translateY(8px);
+  animation: brideRowIn 0.35s ease forwards;
+}
+.bride-row:last-child { border-bottom: none; }
+@keyframes brideRowIn { to { opacity: 1; transform: translateY(0); } }
+.bride-row-q {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.88rem; font-style: italic;
+  color: var(--text-faint); margin-bottom: 0.6rem;
+}
+.bride-row-compare { display: flex; align-items: center; gap: 1rem; }
+.bride-row-col { flex: 1; min-width: 80px; }
+.bride-row-label {
+  font-size: 0.48rem; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--text-faint);
+  margin-bottom: 0.15rem;
+}
+.bride-row-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.9rem; font-weight: 400; color: var(--text);
+}
+.bride-row-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════
+   CELEBRATION
+══════════════════════════════════════════════════ */
+.celebration-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-weight: 300; font-style: italic;
+  color: var(--text-secondary); line-height: 1.9;
+  margin-bottom: 2.4rem;
+}
+.celebration-btns {
+  display: flex; flex-direction: column;
+  gap: 0.7rem; align-items: center;
+}
+
+/* Confetti & Hearts */
+#confettiCanvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 300;
+}
+.floating-hearts {
+  position: fixed; inset: 0; pointer-events: none;
+  z-index: 299; overflow: hidden;
+}
+.float-heart {
+  position: absolute; bottom: -20px; opacity: 0;
+  animation: floatUp 5s ease-out forwards;
+}
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+  8%   { opacity: 0.5; }
+  85%  { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-100vh) scale(1); }
+}
+
+/* ══════════════════════════════════════════════════
+   WAITING / LOBBY
+══════════════════════════════════════════════════ */
+.waiting-card { padding: 3.2rem 2.2rem 2.8rem; position: relative; }
+.waiting-pulse-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); margin: 1.6rem auto 1.8rem;
+  animation: waitingPulse 1.6s ease-in-out infinite;
+}
+@keyframes waitingPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; box-shadow: 0 0 0 0 rgba(92,184,214,0.3); }
+  50%      { transform: scale(1.3); opacity: 1; box-shadow: 0 0 0 10px rgba(92,184,214,0); }
+}
+
+/* ══════════════════════════════════════════════════
+   ADMIN PANEL
+══════════════════════════════════════════════════ */
+.admin-panel {
+  display: none;
+  position: fixed; bottom: 1.2rem; right: 1.2rem; z-index: 150;
+  padding: 1.1rem 1.1rem 1.2rem;
+  max-width: 280px; max-height: 68vh; overflow-y: auto;
+  border-radius: var(--radius-sm);
+}
+.admin-title {
+  font-size: 0.5rem; font-weight: 400; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 0.8rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.admin-status {
+  display: inline-block; padding: 0.22rem 0.65rem;
+  background: rgba(92,184,214,0.12); color: var(--deep);
+  border-radius: var(--radius-pill);
+  font-size: 0.44rem; letter-spacing: 0.18em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.admin-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.admin-btn {
+  padding: 0.55rem 0.9rem;
+  background: rgba(92,184,214,0.08);
+  border: 1px solid rgba(92,184,214,0.2);
+  border-radius: var(--radius-pill);
+  color: var(--deep);
+  font-size: 0.54rem; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.admin-btn:hover { background: rgba(92,184,214,0.16); transform: translateY(-1px); }
+.admin-btn-danger {
+  background: rgba(245,184,168,0.14); border-color: rgba(245,184,168,0.32); color: #C8705A;
+}
+.admin-btn-danger:hover { background: rgba(245,184,168,0.24); }
+
+/* ══════════════════════════════════════════════════
+   CONNECTION INDICATOR
+══════════════════════════════════════════════════ */
+.conn-indicator {
+  position: fixed; top: 3.15rem; left: 1.65rem; z-index: 100;
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.48rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); transition: background 0.3s; flex-shrink: 0; }
+.conn-indicator.conn-connected .conn-dot { background: #7ECBA1; box-shadow: 0 0 6px rgba(126,203,161,0.6); }
+.conn-indicator.conn-connecting .conn-dot { background: var(--gold); box-shadow: 0 0 6px rgba(217,181,109,0.6); animation: connPulse 1s ease-in-out infinite; }
+.conn-indicator.conn-offline .conn-dot { background: var(--coral); box-shadow: 0 0 6px rgba(245,184,168,0.6); }
+@keyframes connPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ══════════════════════════════════════════════════
+   TOASTS
+══════════════════════════════════════════════════ */
+.toast-container {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  z-index: 200; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  pointer-events: none;
+}
+.toast {
+  padding: 0.75rem 1.4rem;
+  background: rgba(41,70,91,0.9);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem; font-weight: 300; letter-spacing: 0.02em;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(14px);
+  transition: all 0.35s var(--ease);
+  max-width: 88vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-error   { background: rgba(200,112,90,0.94); }
+.toast-success { background: rgba(92,170,150,0.92); }
+
+/* ══════════════════════════════════════════════════
+   PAUSE OVERLAY
+══════════════════════════════════════════════════ */
+.pause-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(41,70,91,0.74);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+  text-align: center; padding: 2rem;
+}
+.pause-overlay .sec-title { color: #fff; }
+.pause-overlay .body-text { color: rgba(255,255,255,0.82); margin-top: 0.7rem; }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .screen { padding: 3rem 1rem 2.5rem; }
+  .welcome-card { padding: 2.6rem 1.4rem 2.2rem; }
+  .question-card { padding: 2.2rem 1.4rem 1.8rem; }
+  .results-card { padding: 1.8rem 1.2rem 1.6rem; }
+  .btn-primary { padding: 0.9rem 2.4rem; font-size: 0.6rem; }
+  .back-link { top: 1rem; left: 1rem; }
+  .conn-indicator { top: 2.55rem; left: 1rem; }
+  .awards-grid { grid-template-columns: repeat(2, 1fr); }
+  .bride-row-compare { gap: 0.6rem; }
+  .playing-as-bar { top: 0.6rem; right: 0.6rem; padding: 0.4rem 0.8rem; }
+  .player-avatar-wrap { width: 64px; height: 64px; }
+  .player-avatar-initials { font-size: 1.1rem; }
+  .admin-panel { right: 0.7rem; bottom: 0.7rem; max-width: calc(100vw - 1.4rem); }
+}
+@media (max-width: 380px) {
+  .welcome-card { padding: 2rem 1rem 1.6rem; }
+  .btn-primary { padding: 0.85rem 1.8rem; letter-spacing: 0.25em; }
+  .awards-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page-fade"></div>
+
+<!-- Ambient Background -->
+<div class="ambient"></div>
+<div class="amb-circle"></div>
+<div class="amb-circle"></div>
+<div class="amb-circle"></div>
+<div class="amb-circle"></div>
+<div class="sunlight"></div>
+<div class="sparkles" id="sparkleField"></div>
+
+<!-- Subtle wave -->
+<div class="wave-bg">
+  <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <path d="M0,80 C240,100 480,50 720,70 C960,90 1200,40 1440,60 L1440,120 L0,120 Z" fill="rgba(92,184,214,0.04)"/>
+    <path d="M0,90 C360,60 720,110 1080,70 C1260,55 1380,85 1440,80 L1440,120 L0,120 Z" fill="rgba(126,214,232,0.03)"/>
+  </svg>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+<div class="floating-hearts" id="floatingHearts"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ring"></div>
+  <p class="loading-text">Counting the votes...</p>
+</div>
+
+<!-- Connection indicator -->
+<div class="conn-indicator conn-connecting" id="connIndicator">
+  <span class="conn-dot"></span><span class="conn-text">Connecting...</span>
+</div>
+
+<!-- Playing As Bar (shown during game) -->
+<div class="playing-as-bar" id="playingAsBar" style="display:none;">
+  <div class="playing-as-avatar" id="playingAsAvatar"></div>
+  <span class="playing-as-text">Playing as <span class="playing-as-name" id="playingAsName"></span></span>
+</div>
+
+<a href="index.html" class="back-link">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  Back
+</a>
+
+<!-- Toasts -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<!-- ═══════════════ SCREEN 1: WELCOME ═══════════════ -->
+<section class="screen active" id="screenWelcome">
+  <div class="screen-inner screen-enter">
+    <div class="glass welcome-card">
+      <div class="welcome-bride bride-shimmer">
+        <span class="bride-crown">👑</span>
+        <span>Bride Rowan</span>
+      </div>
+      <p class="eyebrow">Bride Tribe Game</p>
+      <h1 class="sec-title">Who's Most<br><em>Likely To?</em></h1>
+      <div class="divider"><span class="divider-dot"></span></div>
+      <p class="body-text" style="margin-bottom:2.4rem;">
+        Think you know the Bride Tribe best?<br>
+        Vote for your friends, laugh together,<br>
+        and discover the final winners.
+      </p>
+      <button class="btn-primary" id="btnStart">Start Playing</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 2: PLAYER SELECT ═══════════════ -->
+<section class="screen" id="screenPlayers">
+  <div class="screen-inner" style="max-width:620px;">
+    <p class="eyebrow">✨ Who's Playing?</p>
+    <h2 class="sec-title">Select Your <em>Name</em></h2>
+    <div class="divider"><span class="divider-dot"></span></div>
+    <p class="select-subtitle">Tap your name to begin the game.</p>
+    <div class="players-grid" id="playersGrid"></div>
+    <button class="btn-primary" id="btnContinue" disabled>Continue →</button>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 3: WAITING / LOBBY ═══════════════ -->
+<section class="screen" id="screenWaiting">
+  <div class="screen-inner">
+    <div class="glass waiting-card">
+      <p class="eyebrow">Get Ready</p>
+      <h2 class="sec-title">Waiting to <em>Begin</em></h2>
+      <div class="divider"><span class="divider-dot"></span></div>
+      <div class="waiting-pulse-dot"></div>
+      <p class="body-text" id="waitingText">Waiting for the host to start the game...</p>
+      <div style="margin-top:2rem;">
+        <button class="btn-primary" id="btnStartGame" style="display:none;">Start Game</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 4: QUESTION ═══════════════ -->
+<section class="screen" id="screenQuestion">
+  <div class="screen-inner">
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <p class="progress-label" id="progressLabel">Question 1 of 15</p>
+    </div>
+    <div class="vote-count-badge-wrap">
+      <span class="vote-count-badge" id="voteCountBadge">0/6 voted</span>
+    </div>
+    <div class="glass question-card">
+      <p class="question-prefix">Who's most likely to...</p>
+      <h2 class="question-text" id="questionText"></h2>
+    </div>
+    <div class="vote-grid" id="voteGrid"></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 5: RESULTS ═══════════════ -->
+<section class="screen" id="screenResults">
+  <div class="screen-inner">
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="resultsProgressFill" style="width:0%"></div>
+      </div>
+      <p class="progress-label" id="resultsProgressLabel">Question 1 of 15</p>
+    </div>
+    <div class="glass results-card">
+      <p class="eyebrow">Results</p>
+      <p class="results-question" id="resultsQuestion"></p>
+      <div class="unanimous-banner" id="unanimousBanner">
+        <p class="unanimous-text">Everyone agreed</p>
+      </div>
+      <div class="vote-bars" id="voteBars"></div>
+      <button class="btn-primary" id="btnNext" style="display:none;">Next Question</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 6: AWARDS ═══════════════ -->
+<section class="screen" id="screenAwards">
+  <div class="screen-inner">
+    <p class="eyebrow">The Verdict Is In</p>
+    <h2 class="sec-title">Bride Tribe<br><em>Awards</em></h2>
+    <div class="divider"><span class="divider-dot"></span></div>
+    <div class="awards-grid" id="awardsGrid"></div>
+    <button class="btn-primary" id="btnShowBride" style="display:none;">Reveal Bride's Answers</button>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 7: BRIDE'S ANSWERS ═══════════════ -->
+<section class="screen" id="screenBride">
+  <div class="screen-inner">
+    <p class="eyebrow">The Bride Has Spoken</p>
+    <h2 class="sec-title">Bride's <em>Answers</em></h2>
+    <div class="divider"><span class="divider-dot"></span></div>
+    <div class="glass" style="padding:1.6rem 1.4rem;border-radius:22px;">
+      <div class="bride-list" id="brideList"></div>
+    </div>
+    <div style="margin-top:1.4rem;">
+      <button class="btn-primary" id="btnCelebrate" style="display:none;">See Celebration</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ SCREEN 8: CELEBRATION ═══════════════ -->
+<section class="screen" id="screenCelebration">
+  <div class="screen-inner">
+    <p class="eyebrow">That's a Wrap</p>
+    <h2 class="sec-title">What a<br><em>Bride Tribe</em></h2>
+    <div class="divider"><span class="divider-dot"></span></div>
+    <p class="celebration-text">
+      The votes are in, the laughs were had,<br>
+      and the Bride Tribe has spoken.<br><br>
+      Here's to friendship, laughter,<br>
+      and an unforgettable celebration.
+    </p>
+    <div class="celebration-btns">
+      <button class="btn-primary" id="btnReplay" style="display:none;">Restart Game</button>
+      <a href="index.html" class="btn-ghost">Back to Invitation</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ ADMIN PANEL ═══════════════ -->
+<div class="admin-panel glass" id="adminPanel">
+  <p class="admin-title">Admin Controls <span class="admin-status" id="adminStatus">waiting</span></p>
+  <div class="admin-btns" id="adminBtns"></div>
+</div>
+
+<!-- ═══════════════ PAUSE OVERLAY ═══════════════ -->
+<div class="pause-overlay" id="pauseOverlay">
+  <div>
+    <p class="eyebrow">Hold Tight</p>
+    <h2 class="sec-title">Game <em>Paused</em></h2>
+    <p class="body-text">We'll be right back — the host has paused the game.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════
+   1. CONFIGURATION
+══════════════════════════════════════════════════ */
+
+var QUESTIONS = [
+  { id: 1,  text: 'Cry during the wedding?',    award: '🌊 Beach Queen',       category: 'emotional' },
+  { id: 2,  text: 'Be late?',                   award: '⏰ Island Time',       category: 'personality' },
+  { id: 3,  text: 'Forget her phone?',          award: '📱 Unplugged',         category: 'personality' },
+  { id: 4,  text: 'Lose her sunglasses?',       award: '🕶️ Sunglass Loser',   category: 'personality' },
+  { id: 5,  text: 'Spend the most money?',      award: '🛍️ Shopping Queen',    category: 'lifestyle' },
+  { id: 6,  text: 'Dance until sunrise?',       award: '💃 Dance Queen',       category: 'lifestyle' },
+  { id: 7,  text: 'Start karaoke?',             award: '🎤 Karaoke Queen',     category: 'lifestyle' },
+  { id: 8,  text: 'Order dessert first?',       award: '🍰 Dessert Lover',     category: 'lifestyle' },
+  { id: 9,  text: 'Take 100 selfies?',          award: '📸 Selfie Queen',      category: 'lifestyle' },
+  { id: 10, text: 'Start another girls trip?',  award: '🏖️ Vacation Planner',  category: 'future' },
+  { id: 11, text: 'Become famous?',             award: '☀️ Sunshine Girl',     category: 'future' },
+  { id: 12, text: 'Be the life of the party?',  award: '🎉 Party Queen',       category: 'personality' },
+  { id: 13, text: 'Forget the bouquet?',        award: '💐 Forgetful Friend',  category: 'personality' },
+  { id: 14, text: 'Catch the bouquet?',         award: '💍 Next in Line',      category: 'future' },
+  { id: 15, text: 'Make everyone laugh?',       award: '😂 Chaos Queen',       category: 'personality' }
+];
+
+var DEFAULT_PLAYERS = [
+  { id: "rowan", name: "Rowan", image: "assets/players/rowan.jpg", bride: true, admin: true },
+  { id: "habiba", name: "Habiba", image: "assets/players/habiba.jpg", bride: false, admin: false },
+  { id: "salma", name: "Salma", image: "assets/players/salma.jpg", bride: false, admin: false },
+  { id: "shahd-amir", name: "Shahd Amir", image: "assets/players/shahd-amir.jpg", bride: false, admin: false },
+  { id: "aya", name: "Aya", image: "assets/players/aya.jpg", bride: false, admin: false },
+  { id: "shosho", name: "Shosho", image: "assets/players/shosho.jpg", bride: false, admin: false }
+];
+
+var BRIDE_ANSWERS = {
+  1: 'rowan', 2: 'shosho', 3: 'aya', 4: 'habiba', 5: 'salma',
+  6: 'shahd-amir', 7: 'aya', 8: 'rowan', 9: 'shahd-amir', 10: 'shosho',
+  11: 'salma', 12: 'habiba', 13: 'aya', 14: 'shahd-amir', 15: 'rowan'
+};
+
+/* Pastel beach avatar colors */
+var AVATAR_COLORS = [
+  { bg: '#E4F3F8', text: '#5CA8C4' },
+  { bg: '#F4E7D3', text: '#B8976A' },
+  { bg: '#E8F4F0', text: '#6BAA96' },
+  { bg: '#F0E8F4', text: '#9A82B0' },
+  { bg: '#FDE8E2', text: '#C8907E' },
+  { bg: '#E4EEF6', text: '#7498B4' },
+  { bg: '#F4F0E4', text: '#A89868' },
+  { bg: '#E2F0F0', text: '#6AA0A0' }
+];
+
+/* ══════════════════════════════════════════════════
+   2. STATE
+══════════════════════════════════════════════════ */
+var state = {
+  players: [],
+  currentPlayerId: null,
+  isAdmin: false,
+  gameStatus: null,
+  currentQuestion: 1,
+  hasVotedCurrent: false,
+  gameUnsub: null,
+  voteUnsub: null,
+  allVotesByQuestion: null,
+  confettiFiredFor: {}
+};
+
+/* ══════════════════════════════════════════════════
+   3. DOM CACHING
+══════════════════════════════════════════════════ */
+var D = {};
+function cacheDom() {
+  [
+    'screenWelcome','screenPlayers','screenWaiting','screenQuestion','screenResults',
+    'screenAwards','screenBride','screenCelebration',
+    'playersGrid','btnContinue',
+    'waitingText','btnStartGame',
+    'progressFill','progressLabel','questionText','voteGrid','voteCountBadge',
+    'resultsProgressFill','resultsProgressLabel',
+    'resultsQuestion','voteBars','unanimousBanner','btnNext',
+    'awardsGrid','btnShowBride',
+    'brideList','btnCelebrate',
+    'btnReplay',
+    'loadingOverlay',
+    'confettiCanvas','floatingHearts','sparkleField',
+    'playingAsBar','playingAsAvatar','playingAsName',
+    'adminPanel','adminBtns','adminStatus',
+    'connIndicator','toastContainer','pauseOverlay'
+  ].forEach(function(id) { D[id] = document.getElementById(id); });
+}
+
+/* ══════════════════════════════════════════════════
+   4. UTILITIES
+══════════════════════════════════════════════════ */
+function showScreen(el) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  el.classList.add('active');
+  var inner = el.querySelector('.screen-inner');
+  if (inner) { inner.classList.remove('screen-enter'); void inner.offsetWidth; inner.classList.add('screen-enter'); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  var bar = D.playingAsBar;
+  if (bar) {
+    var hideOn = ['screenWelcome', 'screenPlayers'];
+    bar.style.display = hideOn.indexOf(el.id) !== -1 ? 'none' : (state.currentPlayerId ? 'flex' : 'none');
+  }
+}
+
+function addRipple(btn, e) {
+  var r = document.createElement('span');
+  r.className = 'ripple';
+  var rect = btn.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height);
+  r.style.width = r.style.height = size + 'px';
+  var cx = (e && e.clientX) ? e.clientX : rect.left + rect.width / 2;
+  var cy = (e && e.clientY) ? e.clientY : rect.top + rect.height / 2;
+  r.style.left = (cx - rect.left - size / 2) + 'px';
+  r.style.top  = (cy - rect.top - size / 2) + 'px';
+  btn.style.position = btn.style.position || 'relative';
+  btn.appendChild(r);
+  r.addEventListener('animationend', function() { r.remove(); });
+}
+
+function addWaterRipple(el) {
+  for (var i = 0; i < 2; i++) {
+    var w = document.createElement('span');
+    w.className = 'water-ripple';
+    w.style.width = w.style.height = '60px';
+    w.style.left = 'calc(50% - 30px)';
+    w.style.top = 'calc(50% - 30px)';
+    w.style.animationDelay = (i * 0.15) + 's';
+    el.appendChild(w);
+    (function(el) { setTimeout(function() { el.remove(); }, 1000); })(w);
+  }
+}
+
+function getInitials(name) {
+  return name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+}
+function getAvatarColor(name) {
+  var h = 0;
+  for (var i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+/* player is { id, name, image, bride, admin } */
+function buildAvatar(player) {
+  var c = getAvatarColor(player.name);
+  return '<img src="assets/players/' + player.id + '.jpg" alt="' + player.name + '" ' +
+    'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+    '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;' +
+    'background:' + c.bg + ';color:' + c.text + ';font-family:\'Playfair Display\',serif;' +
+    'font-weight:500;border-radius:50%;">' + getInitials(player.name) + '</span>';
+}
+
+function buildProfileAvatar(player) {
+  var c = getAvatarColor(player.name);
+  return '<img src="assets/players/' + player.id + '.jpg" alt="' + player.name + '" ' +
+    'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+    '<span class="player-avatar-initials" style="display:none;' +
+    'background:' + c.bg + ';color:' + c.text + ';">' + getInitials(player.name) + '</span>';
+}
+
+function getPlayerById(id) {
+  if (!id) return null;
+  for (var i = 0; i < state.players.length; i++) {
+    if (state.players[i].id === id) return state.players[i];
+  }
+  return null;
+}
+
+function getAdminName() {
+  for (var i = 0; i < state.players.length; i++) {
+    if (state.players[i].admin) return state.players[i].name;
+  }
+  return 'the host';
+}
+
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+function animateCount(el, to, dur) {
+  var s = performance.now();
+  (function step(now) {
+    var p = Math.min((now - s) / dur, 1);
+    el.textContent = Math.round(to * easeOut(p)) + '%';
+    if (p < 1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
+/* ══════════════════════════════════════════════════
+   5. TOAST NOTIFICATIONS
+══════════════════════════════════════════════════ */
+function showToast(message, type) {
+  type = type || 'info';
+  if (!D.toastContainer) return;
+  var toast = document.createElement('div');
+  toast.className = 'toast' + (type !== 'info' ? ' toast-' + type : '');
+  toast.textContent = message;
+  D.toastContainer.appendChild(toast);
+  requestAnimationFrame(function() { toast.classList.add('show'); });
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { toast.remove(); }, 350);
+  }, 3200);
+}
+
+function setConnStatus(status) {
+  var el = D.connIndicator;
+  if (!el) return;
+  el.className = 'conn-indicator conn-' + status;
+  var text = el.querySelector('.conn-text');
+  var labels = { connected: 'Connected', connecting: 'Connecting...', offline: 'Offline' };
+  if (text) text.textContent = labels[status] || status;
+}
+
+window.addEventListener('online', function() { setConnStatus('connected'); showToast('Back online', 'success'); });
+window.addEventListener('offline', function() { setConnStatus('offline'); showToast('You are offline', 'error'); });
+
+/* ══════════════════════════════════════════════════
+   6. FIREBASE SERVICE
+══════════════════════════════════════════════════ */
+function waitForFirebase(cb) {
+  if (window._db && window._fs) { cb(); return; }
+  window.addEventListener('firebase-ready', function handler() {
+    window.removeEventListener('firebase-ready', handler);
+    cb();
+  });
+}
+
+function serverTs() { return window._fs.serverTimestamp(); }
+
+async function seedData() {
+  var db = window._db, fs = window._fs;
+  try {
+    var playersSnap = await fs.getDocs(fs.collection(db, 'players'));
+    if (playersSnap.empty) {
+      var pBatch = fs.writeBatch(db);
+      DEFAULT_PLAYERS.forEach(function(p) { pBatch.set(fs.doc(db, 'players', p.id), p); });
+      await pBatch.commit();
+    }
+
+    var qSnap = await fs.getDocs(fs.collection(db, 'questions'));
+    if (qSnap.empty) {
+      var qBatch = fs.writeBatch(db);
+      QUESTIONS.forEach(function(q) { qBatch.set(fs.doc(db, 'questions', String(q.id)), q); });
+      await qBatch.commit();
+    }
+
+    var baSnap = await fs.getDocs(fs.collection(db, 'brideAnswers'));
+    if (baSnap.empty) {
+      var baBatch = fs.writeBatch(db);
+      Object.keys(BRIDE_ANSWERS).forEach(function(qId) {
+        baBatch.set(fs.doc(db, 'brideAnswers', String(qId)), {
+          questionId: Number(qId),
+          selectedPlayerId: BRIDE_ANSWERS[qId]
+        });
+      });
+      await baBatch.commit();
+    }
+
+    var gameSnap = await fs.getDoc(fs.doc(db, 'game', 'current'));
+    if (!gameSnap.exists()) {
+      await fs.setDoc(fs.doc(db, 'game', 'current'), {
+        status: 'waiting',
+        currentQuestion: 1,
+        totalQuestions: QUESTIONS.length,
+        startedAt: null,
+        finishedAt: null,
+        prevStatus: null
+      });
+    }
+  } catch (err) {
+    console.error('Seed error', err);
+    showToast('Connection issue while setting up the game', 'error');
+  }
+}
+
+async function loadPlayers() {
+  try {
+    var snap = await window._fs.getDocs(window._fs.collection(window._db, 'players'));
+    var players = [];
+    snap.forEach(function(d) { players.push(d.data()); });
+    if (!players.length) players = DEFAULT_PLAYERS.slice();
+    var order = DEFAULT_PLAYERS.map(function(p) { return p.id; });
+    players.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+    state.players = players;
+  } catch (err) {
+    console.error(err);
+    state.players = DEFAULT_PLAYERS.slice();
+    showToast('Could not load players — using defaults', 'error');
+  }
+}
+
+async function fetchAllVotesGrouped() {
+  try {
+    var fs = window._fs, db = window._db;
+    var snap = await fs.getDocs(fs.collection(db, 'votes'));
+    var grouped = {};
+    snap.forEach(function(d) {
+      var v = d.data();
+      if (!grouped[v.questionId]) grouped[v.questionId] = {};
+      grouped[v.questionId][v.selectedPlayerId] = (grouped[v.questionId][v.selectedPlayerId] || 0) + 1;
+    });
+    state.allVotesByQuestion = grouped;
+    return grouped;
+  } catch (err) {
+    console.error(err);
+    showToast('Could not load votes', 'error');
+    return state.allVotesByQuestion || {};
+  }
+}
+
+async function fetchBrideAnswers() {
+  try {
+    var fs = window._fs, db = window._db;
+    var snap = await fs.getDocs(fs.collection(db, 'brideAnswers'));
+    var map = {};
+    snap.forEach(function(d) {
+      var v = d.data();
+      map[v.questionId] = v.selectedPlayerId;
+    });
+    if (!Object.keys(map).length) map = BRIDE_ANSWERS;
+    return map;
+  } catch (err) {
+    console.error(err);
+    return BRIDE_ANSWERS;
+  }
+}
+
+async function submitVote(qNum, playerId, card) {
+  if (state.hasVotedCurrent) return;
+  try {
+    var db = window._db, fs = window._fs;
+    var voteId = 'q' + qNum + '_' + state.currentPlayerId;
+    await fs.setDoc(fs.doc(db, 'votes', voteId), {
+      questionId: qNum,
+      voterId: state.currentPlayerId,
+      selectedPlayerId: playerId,
+      timestamp: fs.serverTimestamp()
+    });
+    state.hasVotedCurrent = true;
+    if (card) { addWaterRipple(card); spawnHeartBurst(card); }
+    lockVoteGridUI(playerId);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not submit your vote — try again', 'error');
+  }
+}
+
+async function setGameState(patch) {
+  try {
+    await window._fs.updateDoc(window._fs.doc(window._db, 'game', 'current'), patch);
+  } catch (err) {
+    console.error(err);
+    showToast('Action failed — check your connection', 'error');
+  }
+}
+
+function endGame() {
+  setGameState({ status: 'celebration', finishedAt: serverTs() });
+}
+
+async function resetAllVotes() {
+  try {
+    var db = window._db, fs = window._fs;
+    var votesSnap = await fs.getDocs(fs.collection(db, 'votes'));
+    var batch = fs.writeBatch(db);
+    votesSnap.forEach(function(d) { batch.delete(d.ref); });
+    await batch.commit();
+    state.allVotesByQuestion = {};
+    showToast('All votes reset', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not reset votes', 'error');
+  }
+}
+
+async function restartGame() {
+  try {
+    var db = window._db, fs = window._fs;
+    var votesSnap = await fs.getDocs(fs.collection(db, 'votes'));
+    var batch = fs.writeBatch(db);
+    votesSnap.forEach(function(d) { batch.delete(d.ref); });
+    await batch.commit();
+    await fs.updateDoc(fs.doc(db, 'game', 'current'), {
+      status: 'waiting',
+      currentQuestion: 1,
+      startedAt: null,
+      finishedAt: null,
+      prevStatus: null
+    });
+    state.allVotesByQuestion = {};
+    state.confettiFiredFor = {};
+    showToast('Game restarted', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not restart the game', 'error');
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   7. REAL-TIME LISTENERS
+══════════════════════════════════════════════════ */
+function listenToGameState() {
+  if (state.gameUnsub) return;
+  var db = window._db, fs = window._fs;
+  try {
+    state.gameUnsub = fs.onSnapshot(
+      fs.doc(db, 'game', 'current'),
+      function(snap) {
+        if (!snap.exists()) return;
+        setConnStatus('connected');
+        routeToScreen(snap.data());
+      },
+      function(err) {
+        console.error(err);
+        setConnStatus('offline');
+        showToast('Lost connection — retrying...', 'error');
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    setConnStatus('offline');
+  }
+}
+
+function cleanupVoteListener() {
+  if (state.voteUnsub) { state.voteUnsub(); state.voteUnsub = null; }
+}
+
+function attachVotesListener(qNum, cb) {
+  cleanupVoteListener();
+  var fs = window._fs, db = window._db;
+  try {
+    state.voteUnsub = fs.onSnapshot(
+      fs.query(fs.collection(db, 'votes'), fs.where('questionId', '==', qNum)),
+      function(snap) {
+        var counts = {}, total = 0, hasVoted = false, myChoice = null;
+        snap.forEach(function(d) {
+          var v = d.data();
+          counts[v.selectedPlayerId] = (counts[v.selectedPlayerId] || 0) + 1;
+          total++;
+          if (v.voterId === state.currentPlayerId) { hasVoted = true; myChoice = v.selectedPlayerId; }
+        });
+        cb({ counts: counts, total: total, hasVoted: hasVoted, myChoice: myChoice });
+      },
+      function(err) {
+        console.error(err);
+        showToast('Vote sync issue', 'error');
+      }
+    );
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   8. SCREEN ROUTING
+══════════════════════════════════════════════════ */
+function routeToScreen(data) {
+  var status = data.status || 'waiting';
+  var qNum = data.currentQuestion || 1;
+  state.gameStatus = status;
+  state.currentQuestion = qNum;
+
+  if (status !== 'paused') hidePauseOverlay();
+
+  switch (status) {
+    case 'waiting':
+      cleanupVoteListener();
+      showWaitingScreen();
+      break;
+    case 'question':
+      showQuestionScreen(qNum);
+      break;
+    case 'results':
+      showResultsScreen(qNum);
+      break;
+    case 'paused':
+      showPauseOverlay();
+      break;
+    case 'awards':
+      cleanupVoteListener();
+      showAwardsScreen();
+      break;
+    case 'bride-answers':
+      cleanupVoteListener();
+      showBrideAnswersScreen();
+      break;
+    case 'celebration':
+      cleanupVoteListener();
+      showCelebrationScreen();
+      break;
+    default:
+      cleanupVoteListener();
+      showWaitingScreen();
+  }
+  updateAdminPanel(data);
+}
+
+/* ══════════════════════════════════════════════════
+   9. PLAYER SELECTION
+══════════════════════════════════════════════════ */
+function initWelcome() {
+  document.getElementById('btnStart').addEventListener('click', function(e) {
+    addRipple(this, e);
+    setTimeout(function() { showScreen(D.screenPlayers); renderPlayers(); }, 300);
+  });
+}
+
+function initPlayerSelect() {
+  D.btnContinue.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.currentPlayerId) return;
+    try { localStorage.setItem('currentPlayer', state.currentPlayerId); } catch (err) {}
+    setTimeout(function() {
+      showPlayingAs();
+      listenToGameState();
+    }, 300);
+  });
+}
+
+function renderPlayers() {
+  D.playersGrid.innerHTML = '';
+  state.players.forEach(function(p) {
+    var card = document.createElement('div');
+    var isSelected = state.currentPlayerId === p.id;
+    card.className = 'player-card' + (p.bride ? ' is-bride' : '') + (isSelected ? ' selected' : '');
+
+    var crownHTML = p.bride ? '<span class="player-crown">👑</span>' : '';
+    var brideLabel = p.bride ? '<div class="player-bride-label">The Bride</div>' : '';
+
+    card.innerHTML =
+      '<div class="player-avatar-wrap">' +
+        crownHTML +
+        buildProfileAvatar(p) +
+      '</div>' +
+      '<div class="player-name">' + p.name + '</div>' +
+      brideLabel +
+      '<div class="player-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>';
+
+    card.addEventListener('click', function() {
+      state.currentPlayerId = p.id;
+      state.isAdmin = !!p.admin;
+      D.playersGrid.querySelectorAll('.player-card').forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      D.btnContinue.disabled = false;
+    });
+    D.playersGrid.appendChild(card);
+  });
+  D.btnContinue.disabled = !state.currentPlayerId;
+}
+
+function showPlayingAs() {
+  var p = getPlayerById(state.currentPlayerId);
+  if (!p) return;
+  var c = getAvatarColor(p.name);
+  D.playingAsAvatar.innerHTML =
+    '<img src="assets/players/' + p.id + '.jpg" alt="' + p.name + '" ' +
+    'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+    '<span class="pa-initials" style="display:none;background:' + c.bg + ';color:' + c.text + ';">' +
+    getInitials(p.name) + '</span>';
+  D.playingAsName.textContent = p.name;
+  D.playingAsBar.style.display = 'flex';
+}
+function hidePlayingAs() {
+  D.playingAsBar.style.display = 'none';
+}
+
+/* ══════════════════════════════════════════════════
+   10. WAITING / LOBBY
+══════════════════════════════════════════════════ */
+function showWaitingScreen() {
+  if (state.isAdmin) {
+    D.waitingText.textContent = "You're the host — start the game when everyone's ready.";
+    D.btnStartGame.style.display = 'inline-flex';
+  } else {
+    D.waitingText.textContent = 'Waiting for ' + getAdminName() + ' to start the game...';
+    D.btnStartGame.style.display = 'none';
+  }
+  showScreen(D.screenWaiting);
+}
+
+function initWaiting() {
+  D.btnStartGame.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.isAdmin) return;
+    setGameState({ status: 'question', currentQuestion: 1, startedAt: serverTs(), prevStatus: null });
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   11. QUESTION + VOTING
+══════════════════════════════════════════════════ */
+function showQuestionScreen(qNum) {
+  var q = QUESTIONS[qNum - 1];
+  if (!q) return;
+  var total = QUESTIONS.length;
+  D.progressFill.style.width = Math.round(((qNum - 1) / total) * 100) + '%';
+  D.progressLabel.textContent = 'Question ' + qNum + ' of ' + total;
+  D.questionText.textContent = q.text;
+
+  state.hasVotedCurrent = false;
+  renderVoteGrid(qNum);
+  attachVotesListener(qNum, function(d) { onQuestionVotesUpdate(qNum, d); });
+  showScreen(D.screenQuestion);
+}
+
+function renderVoteGrid(qNum) {
+  D.voteGrid.innerHTML = '';
+  state.players.forEach(function(p) {
+    var isSelf = p.id === state.currentPlayerId;
+    var card = document.createElement('div');
+    card.className = 'vote-card' + (isSelf ? ' locked' : '');
+    card.dataset.playerId = p.id;
+    var brideTag = p.bride ? '<span class="vote-bride-tag">👑</span>' : '';
+    var youTag = isSelf ? '<span style="font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-faint);margin-left:0.4rem;">You</span>' : '';
+    card.innerHTML =
+      '<div class="vote-avatar">' + buildAvatar(p) + '</div>' +
+      '<span class="vote-name">' + p.name + brideTag + youTag + '</span>';
+    if (!isSelf) {
+      card.addEventListener('click', function(e) {
+        if (state.hasVotedCurrent) return;
+        submitVote(qNum, p.id, card);
+      });
+    }
+    D.voteGrid.appendChild(card);
+  });
+}
+
+function onQuestionVotesUpdate(qNum, data) {
+  if (D.voteCountBadge) {
+    D.voteCountBadge.textContent = data.total + '/' + state.players.length + ' voted';
+  }
+  if (data.hasVoted) {
+    state.hasVotedCurrent = true;
+    lockVoteGridUI(data.myChoice);
+  }
+}
+
+function lockVoteGridUI(playerId) {
+  var cards = D.voteGrid.querySelectorAll('.vote-card');
+  cards.forEach(function(c) {
+    c.classList.add('locked');
+    if (c.dataset.playerId === playerId) {
+      c.classList.add('chosen');
+      if (!c.querySelector('.vote-submitted')) {
+        var span = document.createElement('span');
+        span.className = 'vote-submitted';
+        span.textContent = '✔ Vote submitted';
+        c.appendChild(span);
+      }
+    }
+  });
+}
+
+function spawnHeartBurst(el) {
+  var burst = document.createElement('div');
+  burst.className = 'heart-burst';
+  burst.style.top = '50%'; burst.style.left = '50%';
+  var syms = ['♥','✦','❤','✧','〰'];
+  for (var i = 0; i < 6; i++) {
+    var p = document.createElement('span');
+    p.className = 'heart-particle';
+    p.textContent = syms[i % syms.length];
+    var angle = (i / 6) * Math.PI * 2;
+    var dist = 18 + Math.random() * 14;
+    p.style.setProperty('--hx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--hy', Math.sin(angle) * dist + 'px');
+    p.style.animationDelay = (i * 0.03) + 's';
+    p.style.color = 'var(--accent)';
+    burst.appendChild(p);
+  }
+  el.appendChild(burst);
+  setTimeout(function() { burst.remove(); }, 900);
+}
+
+/* ══════════════════════════════════════════════════
+   12. RESULTS
+══════════════════════════════════════════════════ */
+function showResultsScreen(qNum) {
+  attachVotesListener(qNum, function(d) { onResultsVotesUpdate(qNum, d); });
+  showScreen(D.screenResults);
+}
+
+function onResultsVotesUpdate(qNum, data) {
+  var q = QUESTIONS[qNum - 1];
+  if (!q) return;
+  D.resultsProgressFill.style.width = Math.round((qNum / QUESTIONS.length) * 100) + '%';
+  D.resultsProgressLabel.textContent = 'Question ' + qNum + ' of ' + QUESTIONS.length;
+  D.resultsQuestion.textContent = "Who's most likely to " + q.text.toLowerCase();
+
+  var entries = state.players.map(function(p) { return { player: p, count: data.counts[p.id] || 0 }; });
+  entries.sort(function(a, b) { return b.count - a.count; });
+  var voted = entries.filter(function(e) { return e.count > 0; });
+  var unanimous = voted.length === 1 && data.total > 0;
+  D.unanimousBanner.classList.toggle('show', unanimous);
+  if (unanimous && !state.confettiFiredFor[qNum]) {
+    launchConfetti(50);
+    state.confettiFiredFor[qNum] = true;
+  }
+
+  D.voteBars.innerHTML = '';
+  entries.forEach(function(entry, i) {
+    var pv = data.total > 0 ? Math.round((entry.count / data.total) * 100) : 0;
+    var row = document.createElement('div');
+    row.className = 'vote-bar-row' + (i === 0 && entry.count > 0 ? ' winner' : '');
+    row.innerHTML =
+      '<div class="vote-bar-avatar">' + buildAvatar(entry.player) + '</div>' +
+      '<div class="vote-bar-info">' +
+        '<div class="vote-bar-name">' + entry.player.name + '</div>' +
+        '<div class="vote-bar-track"><div class="vote-bar-fill"></div></div>' +
+      '</div><span class="vote-bar-pct">0%</span>';
+    D.voteBars.appendChild(row);
+    (function(row, pv, i) {
+      setTimeout(function() {
+        row.querySelector('.vote-bar-fill').style.width = pv + '%';
+        animateCount(row.querySelector('.vote-bar-pct'), pv, 750);
+      }, 80 + i * 100);
+    })(row, pv, i);
+  });
+
+  var isLast = qNum >= QUESTIONS.length;
+  if (state.isAdmin) {
+    D.btnNext.style.display = 'inline-flex';
+    D.btnNext.textContent = isLast ? 'See Awards' : 'Next Question';
+  } else {
+    D.btnNext.style.display = 'none';
+  }
+}
+
+function initResultsButtons() {
+  D.btnNext.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.isAdmin) return;
+    var qNum = state.currentQuestion;
+    var isLast = qNum >= QUESTIONS.length;
+    setTimeout(function() {
+      if (isLast) setGameState({ status: 'awards' });
+      else setGameState({ status: 'question', currentQuestion: qNum + 1 });
+    }, 200);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   13. AWARDS
+══════════════════════════════════════════════════ */
+async function showAwardsScreen() {
+  launchConfetti(120); spawnFloatingHearts(12);
+  var allVotes = await fetchAllVotesGrouped();
+  D.awardsGrid.innerHTML = '';
+  QUESTIONS.forEach(function(q, i) {
+    var counts = allVotes[q.id] || {};
+    var winnerId = null, maxV = 0;
+    for (var pid in counts) { if (counts[pid] > maxV) { maxV = counts[pid]; winnerId = pid; } }
+    var winner = getPlayerById(winnerId);
+    var parts = q.award.split(' '), emoji = parts[0], title = parts.slice(1).join(' ');
+    var card = document.createElement('div');
+    card.className = 'award-card glass';
+    card.style.animationDelay = (i * 0.07) + 's';
+    card.innerHTML =
+      '<span class="award-emoji">' + emoji + '</span>' +
+      '<div class="award-title">' + title + '</div>' +
+      '<div class="award-winner">' + (winner ? winner.name : '—') + '</div>' +
+      '<div class="award-votes">' + maxV + ' vote' + (maxV !== 1 ? 's' : '') + '</div>';
+    D.awardsGrid.appendChild(card);
+  });
+  D.btnShowBride.style.display = state.isAdmin ? 'inline-flex' : 'none';
+  showScreen(D.screenAwards);
+}
+
+function initAwardsButtons() {
+  D.btnShowBride.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.isAdmin) return;
+    setTimeout(function() { setGameState({ status: 'bride-answers' }); }, 200);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   14. BRIDE ANSWERS
+══════════════════════════════════════════════════ */
+async function showBrideAnswersScreen() {
+  var allVotes = state.allVotesByQuestion && Object.keys(state.allVotesByQuestion).length
+    ? state.allVotesByQuestion
+    : await fetchAllVotesGrouped();
+  var brideAnswers = await fetchBrideAnswers();
+
+  D.brideList.innerHTML = '';
+  QUESTIONS.forEach(function(q, i) {
+    var counts = allVotes[q.id] || {};
+    var gwId = null, maxV = 0;
+    for (var pid in counts) { if (counts[pid] > maxV) { maxV = counts[pid]; gwId = pid; } }
+    var gw = getPlayerById(gwId);
+    var bcId = brideAnswers[q.id];
+    var bc = getPlayerById(bcId);
+    var match = !!(gwId && bcId && gwId === bcId);
+    var row = document.createElement('div');
+    row.className = 'bride-row';
+    row.style.animationDelay = (i * 0.05) + 's';
+    row.innerHTML =
+      '<div class="bride-row-q">Who\'s most likely to ' + q.text.toLowerCase() + '</div>' +
+      '<div class="bride-row-compare">' +
+        '<div class="bride-row-col"><div class="bride-row-label">Guests</div><div class="bride-row-name">' + (gw ? gw.name : '—') + '</div></div>' +
+        '<div class="bride-row-col"><div class="bride-row-label">Bride</div><div class="bride-row-name">' + (bc ? bc.name : '—') + '</div></div>' +
+        '<span class="bride-row-icon">' + (match ? '✓' : '✗') + '</span>' +
+      '</div>';
+    D.brideList.appendChild(row);
+  });
+
+  D.btnCelebrate.style.display = state.isAdmin ? 'inline-flex' : 'none';
+  showScreen(D.screenBride);
+}
+
+function initBrideButtons() {
+  D.btnCelebrate.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.isAdmin) return;
+    setTimeout(function() { setGameState({ status: 'celebration', finishedAt: serverTs() }); }, 200);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   15. CELEBRATION
+══════════════════════════════════════════════════ */
+function showCelebrationScreen() {
+  launchConfetti(150); spawnFloatingHearts(20);
+  D.btnReplay.style.display = state.isAdmin ? 'inline-flex' : 'none';
+  showScreen(D.screenCelebration);
+}
+
+function initCelebration() {
+  D.btnReplay.addEventListener('click', function(e) {
+    addRipple(this, e);
+    if (!state.isAdmin) return;
+    setTimeout(restartGame, 200);
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   16. ADMIN PANEL
+══════════════════════════════════════════════════ */
+function renderAdminButtons(btns) {
+  D.adminBtns.innerHTML = '';
+  btns.forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.className = 'admin-btn' + (b.danger ? ' admin-btn-danger' : '');
+    btn.textContent = b.label;
+    btn.addEventListener('click', function(e) {
+      addRipple(this, e);
+      b.action();
+    });
+    D.adminBtns.appendChild(btn);
+  });
+}
+
+function updateAdminPanel(data) {
+  if (!state.isAdmin) { D.adminPanel.style.display = 'none'; return; }
+  D.adminPanel.style.display = 'block';
+  var status = data.status || 'waiting';
+  var qNum = data.currentQuestion || 1;
+  if (D.adminStatus) D.adminStatus.textContent = status;
+
+  var btns = [];
+  switch (status) {
+    case 'waiting':
+      btns.push({ label: 'Start Game', action: function() {
+        setGameState({ status: 'question', currentQuestion: 1, startedAt: serverTs(), prevStatus: null });
+      }});
+      break;
+    case 'question':
+      btns.push({ label: 'Show Results', action: function() { setGameState({ status: 'results' }); }});
+      btns.push({ label: 'Pause', action: function() { setGameState({ status: 'paused', prevStatus: 'question' }); }});
+      btns.push({ label: 'End Game', danger: true, action: endGame });
+      break;
+    case 'results':
+      var isLast = qNum >= QUESTIONS.length;
+      btns.push({ label: isLast ? 'Show Awards' : 'Next Question', action: function() {
+        if (isLast) setGameState({ status: 'awards' });
+        else setGameState({ status: 'question', currentQuestion: qNum + 1 });
+      }});
+      if (qNum > 1) {
+        btns.push({ label: 'Prev Question', action: function() {
+          setGameState({ status: 'question', currentQuestion: qNum - 1 });
+        }});
+      }
+      btns.push({ label: 'Pause', action: function() { setGameState({ status: 'paused', prevStatus: 'results' }); }});
+      btns.push({ label: 'End Game', danger: true, action: endGame });
+      break;
+    case 'paused':
+      btns.push({ label: 'Resume', action: function() {
+        setGameState({ status: data.prevStatus || 'question', prevStatus: null });
+      }});
+      break;
+    case 'awards':
+      btns.push({ label: 'Reveal Bride Answers', action: function() { setGameState({ status: 'bride-answers' }); }});
+      btns.push({ label: 'Restart', danger: true, action: restartGame });
+      break;
+    case 'bride-answers':
+      btns.push({ label: 'Celebrate!', action: function() { setGameState({ status: 'celebration', finishedAt: serverTs() }); }});
+      btns.push({ label: 'Restart', danger: true, action: restartGame });
+      break;
+    case 'celebration':
+      btns.push({ label: 'Restart', danger: true, action: restartGame });
+      break;
+  }
+  btns.push({ label: 'Reset All Votes', danger: true, action: resetAllVotes });
+  renderAdminButtons(btns);
+}
+
+function initAdminPanel() {
+  /* buttons render dynamically via updateAdminPanel/renderAdminButtons */
+}
+
+/* ══════════════════════════════════════════════════
+   PAUSE OVERLAY
+══════════════════════════════════════════════════ */
+function showPauseOverlay() { D.pauseOverlay.style.display = 'flex'; }
+function hidePauseOverlay() { D.pauseOverlay.style.display = 'none'; }
+
+/* ══════════════════════════════════════════════════
+   17. SPARKLES, CONFETTI, HEARTS
+══════════════════════════════════════════════════ */
+function initSparkles() {
+  for (var i = 0; i < 18; i++) {
+    var s = document.createElement('i');
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.top = (Math.random() * 100) + '%';
+    s.style.animationDelay = (Math.random() * 5) + 's';
+    s.style.animationDuration = (4 + Math.random() * 4) + 's';
+    D.sparkleField.appendChild(s);
+  }
+}
+
+function launchConfetti(count) {
+  var c = D.confettiCanvas;
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  var ctx = c.getContext('2d');
+  var colors = ['#5CB8D6','#7ED6E8','#3D7FA6','#F4E7D3','#D9B56D','#F5B8A8','#B8E8DC','#C4E4F4','#ffffff'];
+  var pieces = [];
+  for (var i = 0; i < count; i++) {
+    pieces.push({
+      x: Math.random() * c.width, y: -10 - Math.random() * c.height * 0.4,
+      w: 3 + Math.random() * 5, h: 2 + Math.random() * 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 2.5, vy: 1.2 + Math.random() * 2.5,
+      rot: Math.random() * Math.PI * 2, rv: (Math.random() - 0.5) * 0.1, life: 1
+    });
+  }
+  var t0 = performance.now();
+  (function draw(now) {
+    var elapsed = (now - t0) / 1000;
+    ctx.clearRect(0, 0, c.width, c.height);
+    var alive = false;
+    pieces.forEach(function(p) {
+      if (p.life <= 0) return; alive = true;
+      p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.rot += p.rv;
+      if (elapsed > 2.5) p.life -= 0.012;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (alive) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, c.width, c.height);
+  })(performance.now());
+}
+
+function spawnFloatingHearts(count) {
+  var syms = ['♥','✦','❤','〰','✧','🐚','🌊'];
+  for (var i = 0; i < count; i++) {
+    var h = document.createElement('span');
+    h.className = 'float-heart';
+    h.textContent = syms[Math.floor(Math.random() * syms.length)];
+    h.style.left = (5 + Math.random() * 90) + '%';
+    h.style.animationDelay = (Math.random() * 3) + 's';
+    h.style.animationDuration = (4 + Math.random() * 3) + 's';
+    h.style.fontSize = (0.7 + Math.random() * 0.6) + 'rem';
+    h.style.color = 'var(--accent)';
+    D.floatingHearts.appendChild(h);
+    (function(el) { setTimeout(function() { el.remove(); }, 8000); })(h);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   18. BOOT
+══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  cacheDom();
+  initSparkles();
+  setConnStatus('connecting');
+
+  initWelcome();
+  initPlayerSelect();
+  initWaiting();
+  initResultsButtons();
+  initAwardsButtons();
+  initBrideButtons();
+  initCelebration();
+  initAdminPanel();
+
+  var savedPlayerId = null;
+  try { savedPlayerId = localStorage.getItem('currentPlayer'); } catch (err) {}
+
+  waitForFirebase(function() {
+    (async function() {
+      setConnStatus('connected');
+      await seedData();
+      await loadPlayers();
+
+      var saved = savedPlayerId ? getPlayerById(savedPlayerId) : null;
+      if (saved) {
+        state.currentPlayerId = saved.id;
+        state.isAdmin = !!saved.admin;
+        showPlayingAs();
+        listenToGameState();
+      } else {
+        showScreen(D.screenWelcome);
+        renderPlayers();
+      }
+    })();
+  });
+});
+</script>
+
+</body>
+</html>
