@@ -2125,9 +2125,62 @@ button,input,textarea { font-family:inherit; }
 
 
 <!-- ╔═══════════════════════════════════════════════╗
+     ║        GAME COUNTDOWN (before unlock)           ║
+     ╚═══════════════════════════════════════════════╝ -->
+<section id="game-countdown-section" style="display:none; background:linear-gradient(180deg,var(--sand) 0%,var(--ivory-warm) 100%); overflow:hidden; position:relative; min-height:100vh;">
+
+  <!-- Soft ambient circles -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">
+    <div style="position:absolute;top:12%;left:10%;width:220px;height:220px;border-radius:50%;background:rgba(200,168,106,0.08);filter:blur(60px);animation:mltDrift 22s ease-in-out infinite;"></div>
+    <div style="position:absolute;bottom:15%;right:8%;width:180px;height:180px;border-radius:50%;background:rgba(92,184,214,0.06);filter:blur(60px);animation:mltDrift 28s ease-in-out infinite reverse;"></div>
+  </div>
+
+  <div class="section-wrap" style="max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;">
+
+    <p class="s-eyebrow reveal">Bride Tribe Game</p>
+    <h2 class="s-title reveal" style="margin-bottom:0.4rem;">Who's Most<br><em>Likely To?</em></h2>
+    <div class="gold-rule reveal"><span class="gold-dot"></span></div>
+
+    <p class="reveal" style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;font-style:italic;color:var(--text-light);line-height:1.85;margin-bottom:2.2rem;">
+      The game hasn't started yet.<br>
+      Get ready — it's almost time.
+    </p>
+
+    <div class="gc-countdown reveal" id="gcCountdown">
+      <div class="gc-unit">
+        <div class="gc-card"><span class="gc-value" id="gcDays">00</span></div>
+        <span class="gc-label">Days</span>
+      </div>
+      <span class="gc-sep">:</span>
+      <div class="gc-unit">
+        <div class="gc-card"><span class="gc-value" id="gcHours">00</span></div>
+        <span class="gc-label">Hours</span>
+      </div>
+      <span class="gc-sep">:</span>
+      <div class="gc-unit">
+        <div class="gc-card"><span class="gc-value" id="gcMins">00</span></div>
+        <span class="gc-label">Minutes</span>
+      </div>
+      <span class="gc-sep">:</span>
+      <div class="gc-unit">
+        <div class="gc-card"><span class="gc-value" id="gcSecs">00</span></div>
+        <span class="gc-label">Seconds</span>
+      </div>
+    </div>
+
+    <p class="reveal" style="margin-top:2rem;font-family:'Jost',sans-serif;font-size:0.65rem;font-weight:400;letter-spacing:0.25em;text-transform:uppercase;color:var(--text-light);display:flex;align-items:center;gap:0.6rem;">
+      <span style="width:24px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.5;"></span>
+      August 8, 2026
+      <span style="width:24px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.5;"></span>
+    </p>
+
+  </div>
+</section>
+
+<!-- ╔═══════════════════════════════════════════════╗
      ║           WHO'S MOST LIKELY TO?                 ║
      ╚═══════════════════════════════════════════════╝ -->
-<section id="most-likely-section" style="background:linear-gradient(180deg,var(--sand) 0%,var(--ivory-warm) 100%);overflow:hidden;position:relative;">
+<section id="most-likely-section" style="display:none; background:linear-gradient(180deg,var(--sand) 0%,var(--ivory-warm) 100%);overflow:hidden;position:relative;">
 
   <!-- Soft ambient circles -->
   <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;">
@@ -2274,6 +2327,61 @@ button,input,textarea { font-family:inherit; }
   .mlt-start-btn { padding:0.9rem 2.4rem; font-size:0.6rem; }
   .mlt-feature-text { font-size:0.95rem; }
 }
+
+/* ══════════════════════════════════════════════════
+   GAME COUNTDOWN — Pre-unlock Section
+══════════════════════════════════════════════════ */
+.gc-countdown {
+  display:flex; gap:clamp(0.6rem,2.5vw,1.2rem);
+  justify-content:center; align-items:flex-start; flex-wrap:nowrap;
+}
+.gc-unit {
+  display:flex; flex-direction:column; align-items:center;
+}
+.gc-card {
+  width:clamp(58px,15vw,90px); aspect-ratio:1/1;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(200,168,106,0.18);
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(68,61,61,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+  position:relative; overflow:hidden;
+}
+.gc-card::before {
+  content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent);
+}
+.gc-value {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.6rem,5.5vw,2.6rem);
+  font-weight:600; color:var(--text);
+  line-height:1; position:relative; z-index:1;
+}
+.gc-label {
+  font-family:'Jost',sans-serif;
+  font-size:clamp(0.45rem,1.3vw,0.55rem);
+  font-weight:400; letter-spacing:0.25em;
+  text-transform:uppercase; color:var(--text-light);
+  margin-top:0.5rem;
+}
+.gc-sep {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.2rem,4vw,2rem);
+  color:var(--gold);
+  align-self:flex-start;
+  margin-top:clamp(12px,3.5vw,24px);
+  opacity:0.5;
+  animation:gcBlink 1s step-end infinite;
+}
+@keyframes gcBlink {
+  0%,100% { opacity:0.5; }
+  50% { opacity:0.12; }
+}
+
+#game-countdown-section .section-wrap {
+  padding-top:4rem; padding-bottom:4rem;
+}
 </style>
 
 <script>
@@ -2301,6 +2409,62 @@ function navigateToGame(){
   requestAnimationFrame(function(){ overlay.style.opacity = '1'; });
   setTimeout(function(){ window.location.href = 'most-likely.html'; }, 520);
 }
+
+/* ── Game Countdown / Hero Toggle ── */
+(function(){
+  var GAME_UNLOCK = new Date('2026-08-08T00:00:00');
+  var countdownEl = document.getElementById('game-countdown-section');
+  var heroEl      = document.getElementById('most-likely-section');
+  var interval    = null;
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function tick(){
+    var now  = new Date();
+    var diff = GAME_UNLOCK - now;
+    if(diff <= 0){
+      unlock();
+      return;
+    }
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('gcDays').textContent  = pad(d);
+    document.getElementById('gcHours').textContent = pad(h);
+    document.getElementById('gcMins').textContent  = pad(m);
+    document.getElementById('gcSecs').textContent  = pad(s);
+  }
+
+  function unlock(){
+    if(interval){ clearInterval(interval); interval = null; }
+    /* Remove countdown from DOM entirely */
+    if(countdownEl && countdownEl.parentNode){
+      countdownEl.parentNode.removeChild(countdownEl);
+    }
+    /* Show the hero section */
+    if(heroEl){
+      heroEl.style.display = '';
+      heroEl.style.opacity = '0';
+      heroEl.style.transition = 'opacity 0.6s ease';
+      requestAnimationFrame(function(){
+        heroEl.style.opacity = '1';
+      });
+    }
+  }
+
+  /* On load: decide which view to show */
+  if(new Date() >= GAME_UNLOCK){
+    /* Already past unlock — show hero, remove countdown from DOM */
+    if(countdownEl && countdownEl.parentNode) countdownEl.parentNode.removeChild(countdownEl);
+    if(heroEl) heroEl.style.display = '';
+  } else {
+    /* Show countdown, keep hero hidden */
+    if(countdownEl) countdownEl.style.display = '';
+    tick();
+    interval = setInterval(tick, 1000);
+  }
+})();
 </script>
 
 
