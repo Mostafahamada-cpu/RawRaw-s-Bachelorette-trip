@@ -1796,7 +1796,7 @@ var THE_MEN = [
   { id:"hossam",  name:"Hossam",  age:22, occupation:"Telesales",              hometown:"Hadayek El Kobba",  hobbies:"Sketching",                 redFlags:"Sleeps For 100 Hours Whenever He's Upset" },
   { id:"shady",   name:"Shady",   age:22, occupation:"Medical Representative", hometown:"October",           hobbies:"Delulu Management",         redFlags:"Takes Videos Just To Delete Them" },
   { id:"selim",   name:"Selim",   age:23, occupation:"Treasury Specialist",    hometown:"Al-Daher",          hobbies:"Taking Photos",             redFlags:"Gets Stuck In Summer Heat Without A Fan" },
-  { id:"ramez",   name:"Ramez",   age:24, occupation:"Purchasing Specialist",  hometown:"Maadi",             hobbies:"Handmade Clothes",          redFlags:"Sleeps Like He Is Dead" }
+  { id:"ramez",   name:"Ramez",   age:24, occupation:"Purchasing Specialist",  hometown:"Maadi",             hobbies:"Handmade Clothes",          redFlags:"Sleeps Like He Is Killed" }
 ];
 
 /* ══════════════════════════════════════════════════
@@ -2184,12 +2184,20 @@ function endGame() {
 async function resetAllVotes() {
   try {
     var db = window._db, fs = window._fs;
-    var votesSnap = await fs.getDocs(fs.collection(db, 'votes'));
+    var qNum = state.currentQuestion;
+    /* Only delete votes for the current question */
+    var votesSnap = await fs.getDocs(
+      fs.query(fs.collection(db, 'votes'), fs.where('questionId', '==', qNum))
+    );
     var batch = fs.writeBatch(db);
     votesSnap.forEach(function(d) { batch.delete(d.ref); });
     await batch.commit();
-    state.allVotesByQuestion = {};
-    showToast('All votes reset', 'success');
+    /* Clear local cache for this question only */
+    if (state.allVotesByQuestion) delete state.allVotesByQuestion[qNum];
+    state.hasVotedCurrent = false;
+    /* Unlock vote grid so all players can vote again */
+    renderVoteGrid(qNum);
+    showToast('Votes reset for question ' + qNum, 'success');
   } catch (err) {
     console.error(err);
     showToast('Could not reset votes', 'error');
@@ -2454,18 +2462,16 @@ function renderVoteGrid(qNum) {
   state.players.forEach(function(p) {
     var isSelf = p.id === state.currentPlayerId;
     var card = document.createElement('div');
-    card.className = 'vote-card' + (isSelf ? ' locked' : '');
+    card.className = 'vote-card';
     card.dataset.playerId = p.id;
     var youTag = isSelf ? '<span class="vote-you-tag">You</span>' : '';
     card.innerHTML =
       '<div class="vote-avatar">' + buildAvatar(p) + '</div>' +
       '<span class="vote-name">' + p.name + youTag + '</span>';
-    if (!isSelf) {
-      card.addEventListener('click', function(e) {
-        if (state.hasVotedCurrent) return;
-        submitVote(qNum, p.id, card);
-      });
-    }
+    card.addEventListener('click', function(e) {
+      if (state.hasVotedCurrent) return;
+      submitVote(qNum, p.id, card);
+    });
     D.voteGrid.appendChild(card);
   });
 }
@@ -2477,6 +2483,10 @@ function onQuestionVotesUpdate(qNum, data) {
   if (data.hasVoted) {
     state.hasVotedCurrent = true;
     lockVoteGridUI(data.myChoice);
+  } else {
+    /* Votes were reset — unlock grid so player can vote again */
+    state.hasVotedCurrent = false;
+    renderVoteGrid(qNum);
   }
 }
 
