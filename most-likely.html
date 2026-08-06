@@ -2788,7 +2788,11 @@ function updateAdminPanel(data) {
 /* ══════════════════════════════════════════════════
    PAUSE OVERLAY
 ══════════════════════════════════════════════════ */
-function showPauseOverlay() { D.pauseOverlay.style.display = 'flex'; }
+function showPauseOverlay() {
+  /* Admin should never be blocked by the pause overlay */
+  if (state.isAdmin) return;
+  D.pauseOverlay.style.display = 'flex';
+}
 function hidePauseOverlay() { D.pauseOverlay.style.display = 'none'; }
 
 /* ══════════════════════════════════════════════════
