@@ -2764,7 +2764,7 @@ function updateAdminPanel(data) {
       danger.push({ icon: '🏁', label: 'End Game', style: 'warn', action: endGame });
       break;
     case 'paused':
-      flow.push({ icon: '▶', label: 'Resume', style: 'primary', action: function() {
+      flow.push({ icon: '▶', label: 'Continue Game', style: 'primary', action: function() {
         setGameState({ status: data.prevStatus || 'question', prevStatus: null });
       }});
       break;
