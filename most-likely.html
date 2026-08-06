@@ -1676,7 +1676,7 @@ img {
    1. CONFIGURATION
 ══════════════════════════════════════════════════ */
 
-var UNLOCK_DATE = new Date('2020-01-01T00:00:00'); /* TEMP: lock disabled — change back to 2026-08-08T22:00:00 */
+var UNLOCK_DATE = new Date('2026-08-08T00:00:00');
 
 var QUESTIONS_MASTER = [
   { id: 1,  text: "Who's most likely to cry during the wedding?",                    award: "💧 Cry Baby" },
@@ -1866,7 +1866,8 @@ function updateCountdown() {
   if (diff <= 0) {
     state.gameLocked = false;
     D.lockScreen.classList.add('hidden');
-    location.reload();
+    /* Run full game boot without page reload */
+    bootGame();
     return;
   }
   var days = Math.floor(diff / 86400000);
@@ -3003,12 +3004,10 @@ function closeManModal() {
 /* ══════════════════════════════════════════════════
    20. BOOT
 ══════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function() {
-  cacheDom();
-
-  /* Check lock FIRST */
-  var unlocked = checkLock();
-  if (!unlocked) return; /* game locked — countdown shown */
+var _booted = false;
+function bootGame() {
+  if (_booted) return;
+  _booted = true;
 
   initSparkles();
   initProfileOverlay();
@@ -3045,6 +3044,16 @@ document.addEventListener('DOMContentLoaded', function() {
       renderPlayers();
     })();
   });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  cacheDom();
+
+  /* Check lock FIRST — if locked, countdown will call bootGame() when it hits zero */
+  var unlocked = checkLock();
+  if (!unlocked) return;
+
+  bootGame();
 });
 </script>
 
