@@ -337,7 +337,7 @@ img {
 }
 
 /* ══════════════════════════════════════════════════
-   LOCK SCREEN
+   LOCK / COUNTDOWN SCREEN
 ══════════════════════════════════════════════════ */
 .lock-screen {
   position: fixed; inset: 0; z-index: 10000;
@@ -345,45 +345,135 @@ img {
   flex-direction: column;
   background: var(--black);
   text-align: center; padding: 2rem;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
 }
-.lock-screen.hidden { display: none; }
-.lock-icon { font-size: 3rem; margin-bottom: 1.5rem; animation: lockPulse 2s ease-in-out infinite; }
-@keyframes lockPulse {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+.lock-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Decorative top line */
+.lock-screen::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+}
+
+.lock-ornament {
+  font-size: 1.6rem; margin-bottom: 1.8rem;
+  letter-spacing: 0.6em;
+  opacity: 0.5;
+  animation: lockOrnPulse 3s ease-in-out infinite;
+}
+@keyframes lockOrnPulse {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+
+.lock-pretitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.6rem;
 }
 .lock-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-size: clamp(2.4rem, 10vw, 4.5rem);
   color: var(--white);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+  line-height: 1;
+  margin-bottom: 0.3rem;
 }
 .lock-subtitle {
-  font-size: 0.85rem; font-weight: 300;
-  color: var(--white-faint);
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
+  font-weight: 700; font-style: italic;
+  color: var(--white-dim);
   margin-bottom: 2.5rem;
 }
+
+/* Countdown grid */
 .countdown {
-  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  display: flex; gap: clamp(0.8rem, 3vw, 1.5rem);
+  justify-content: center; flex-wrap: nowrap;
 }
 .countdown-unit {
   display: flex; flex-direction: column; align-items: center;
-  min-width: 70px;
+  min-width: clamp(60px, 16vw, 100px);
+}
+.countdown-card {
+  width: clamp(60px, 16vw, 100px);
+  aspect-ratio: 1 / 1;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--black-light);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+}
+.countdown-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(212,175,55,0.04) 0%, transparent 50%);
+  pointer-events: none;
 }
 .countdown-value {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.5rem, 8vw, 3.5rem);
-  color: var(--red);
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  color: var(--white);
   line-height: 1;
-  text-shadow: 0 0 20px rgba(200,16,46,0.4);
+  position: relative; z-index: 1;
 }
 .countdown-label {
-  font-size: 0.55rem; font-weight: 600;
-  letter-spacing: 0.3em; text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.5rem, 1.5vw, 0.6rem);
+  font-weight: 600;
+  letter-spacing: 0.25em; text-transform: uppercase;
   color: var(--white-faint);
-  margin-top: 0.3rem;
+  margin-top: 0.6rem;
+}
+.countdown-sep {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  color: var(--gold);
+  align-self: flex-start;
+  margin-top: clamp(14px, 4vw, 28px);
+  opacity: 0.6;
+  animation: sepBlink 1s step-end infinite;
+}
+@keyframes sepBlink {
+  0%,100% { opacity: 0.6; }
+  50% { opacity: 0.15; }
+}
+
+.lock-date {
+  margin-top: 2.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--white-faint);
+  display: flex; align-items: center; gap: 0.6rem; justify-content: center;
+}
+.lock-date-line {
+  width: 24px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  opacity: 0.4;
+}
+
+/* Hero reveal animation */
+#screenStartPage {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+#screenStartPage.hero-hidden {
+  opacity: 0;
 }
 
 /* ══════════════════════════════════════════════════
@@ -1443,16 +1533,37 @@ img {
 <canvas id="confettiCanvas"></canvas>
 <div class="floating-hearts" id="floatingHearts"></div>
 
-<!-- Lock Screen -->
+<!-- Lock / Countdown Screen -->
 <div class="lock-screen" id="lockScreen">
-  <div class="lock-icon">🔒</div>
-  <h1 class="lock-title">Game Locked</h1>
-  <p class="lock-subtitle">The game will be unlocked soon...</p>
+  <div class="lock-ornament">✦ ✦ ✦</div>
+  <p class="lock-pretitle">Rowan's Bachelorette</p>
+  <h1 class="lock-title">The Game Begins In</h1>
+  <p class="lock-subtitle">Are you ready?</p>
   <div class="countdown" id="lockCountdown">
-    <div class="countdown-unit"><span class="countdown-value" id="cdDays">00</span><span class="countdown-label">Days</span></div>
-    <div class="countdown-unit"><span class="countdown-value" id="cdHours">00</span><span class="countdown-label">Hours</span></div>
-    <div class="countdown-unit"><span class="countdown-value" id="cdMins">00</span><span class="countdown-label">Minutes</span></div>
-    <div class="countdown-unit"><span class="countdown-value" id="cdSecs">00</span><span class="countdown-label">Seconds</span></div>
+    <div class="countdown-unit">
+      <div class="countdown-card"><span class="countdown-value" id="cdDays">00</span></div>
+      <span class="countdown-label">Days</span>
+    </div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit">
+      <div class="countdown-card"><span class="countdown-value" id="cdHours">00</span></div>
+      <span class="countdown-label">Hours</span>
+    </div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit">
+      <div class="countdown-card"><span class="countdown-value" id="cdMins">00</span></div>
+      <span class="countdown-label">Minutes</span>
+    </div>
+    <span class="countdown-sep">:</span>
+    <div class="countdown-unit">
+      <div class="countdown-card"><span class="countdown-value" id="cdSecs">00</span></div>
+      <span class="countdown-label">Seconds</span>
+    </div>
+  </div>
+  <div class="lock-date">
+    <span class="lock-date-line"></span>
+    August 8, 2026
+    <span class="lock-date-line"></span>
   </div>
 </div>
 
@@ -1855,8 +1966,10 @@ function checkLock() {
   }
   state.gameLocked = true;
   D.lockScreen.classList.remove('hidden');
+  /* Hide hero section behind the countdown */
+  D.screenStartPage.classList.add('hero-hidden');
   updateCountdown();
-  setInterval(updateCountdown, 1000);
+  window._countdownInterval = setInterval(updateCountdown, 1000);
   return false;
 }
 
@@ -1865,8 +1978,14 @@ function updateCountdown() {
   var diff = UNLOCK_DATE - now;
   if (diff <= 0) {
     state.gameLocked = false;
+    if (window._countdownInterval) { clearInterval(window._countdownInterval); window._countdownInterval = null; }
+    /* Fade out the countdown screen */
     D.lockScreen.classList.add('hidden');
-    /* Run full game boot without page reload */
+    /* After countdown fades out, reveal the hero with a smooth fade-in */
+    setTimeout(function() {
+      D.screenStartPage.classList.remove('hero-hidden');
+    }, 200);
+    /* Boot the game without page reload */
     bootGame();
     return;
   }
