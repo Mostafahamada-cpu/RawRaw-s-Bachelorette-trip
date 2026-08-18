@@ -22,8 +22,10 @@
 <!-- Firebase — shared instance (same project used across the site) -->
 <script type="module">
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, deleteDoc, onSnapshot, where }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBuXqTJNnAwx5RmSEhdc3fdi7jMRAsyFaE",
@@ -38,6 +40,7 @@
   // Initialize once; if an app already exists, reuse it instead of re-initializing.
   const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   const db  = getFirestore(app);
+  const storage = getStorage(app);
 
   // Expose the single shared Firestore handle + helpers for the page scripts.
   window._db           = db;
@@ -47,6 +50,17 @@
   window._fsQuery      = query;
   window._fsOrderBy    = orderBy;
   window._fsTimestamp  = serverTimestamp;
+  window._fsDoc        = doc;
+  window._fsDeleteDoc  = deleteDoc;
+  window._fsOnSnapshot = onSnapshot;
+  window._fsWhere      = where;
+
+  // Firebase Storage helpers
+  window._storage             = storage;
+  window._storageRef          = storageRef;
+  window._uploadBytesResumable = uploadBytesResumable;
+  window._getDownloadURL      = getDownloadURL;
+  window._deleteObject        = deleteObject;
 
   // Load existing wishes as soon as the DOM and Firebase are both ready.
   window.addEventListener('DOMContentLoaded', () => { window.loadWishes && window.loadWishes(); });
@@ -826,6 +840,222 @@ button,input,textarea { font-family:inherit; }
 
 @media (min-width:541px) {
   .act-slider { cursor:grab; }
+}
+
+/* ══════════════════════════════════════════════════
+   PHOTO PROOF SYSTEM
+══════════════════════════════════════════════════ */
+
+/* Upload button */
+.pp-upload-btn {
+  display:inline-flex; align-items:center; gap:0.5rem;
+  margin:1.2rem auto 0; padding:0.65rem 1.6rem;
+  font-family:'Jost',sans-serif; font-size:0.92rem; font-weight:400;
+  color:var(--text-mid);
+  background:linear-gradient(135deg, rgba(232,180,184,0.18) 0%, rgba(245,213,200,0.22) 100%);
+  border:1px solid rgba(232,180,184,0.35);
+  border-radius:30px; cursor:pointer;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transition:all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  position:relative; z-index:1;
+}
+.pp-upload-btn:hover {
+  background:linear-gradient(135deg, rgba(232,180,184,0.32) 0%, rgba(245,213,200,0.38) 100%);
+  border-color:rgba(232,180,184,0.55);
+  box-shadow:0 4px 18px rgba(232,180,184,0.18);
+  transform:translateY(-1px);
+}
+.pp-upload-btn svg { width:18px; height:18px; stroke:var(--text-mid); fill:none; stroke-width:1.5; }
+.pp-upload-btn input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+/* Progress bar */
+.pp-progress-wrap {
+  display:none; margin:0.8rem auto 0; max-width:280px;
+  text-align:center;
+}
+.pp-progress-wrap.active { display:block; }
+.pp-progress-bar {
+  height:4px; border-radius:4px;
+  background:rgba(232,180,184,0.18);
+  overflow:hidden; position:relative;
+}
+.pp-progress-fill {
+  height:100%; width:0%; border-radius:4px;
+  background:linear-gradient(90deg, #E8B4B8, #F5D5C8);
+  transition:width 0.3s ease;
+}
+.pp-progress-text {
+  font-size:0.75rem; color:var(--text-light);
+  margin-top:0.3rem;
+  font-family:'Jost',sans-serif;
+}
+
+/* Toast notifications */
+.pp-toast {
+  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px);
+  padding:0.7rem 1.4rem; border-radius:12px;
+  font-family:'Jost',sans-serif; font-size:0.88rem;
+  color:#fff; z-index:10002;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  opacity:0; transition:all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+  pointer-events:none; white-space:nowrap;
+}
+.pp-toast.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+.pp-toast.success { background:rgba(46,125,50,0.88); }
+.pp-toast.error   { background:rgba(198,40,40,0.88); }
+
+/* Photo count badge */
+.pp-photo-count {
+  display:inline-flex; align-items:center; gap:0.3rem;
+  font-family:'Jost',sans-serif; font-size:0.78rem;
+  color:var(--text-light); margin-left:0.5rem;
+  padding:0.15rem 0.6rem; border-radius:12px;
+  background:rgba(232,180,184,0.12);
+  vertical-align:middle;
+}
+
+/* Completed badge */
+.pp-completed-badge {
+  display:none; align-items:center; gap:0.3rem;
+  font-family:'Jost',sans-serif; font-size:0.78rem;
+  color:#2E7D32; margin-left:0.4rem;
+  padding:0.15rem 0.6rem; border-radius:12px;
+  background:rgba(46,125,50,0.08);
+  vertical-align:middle;
+}
+.pp-completed-badge.visible { display:inline-flex; }
+
+/* Photo gallery grid */
+.pp-gallery {
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:8px; margin:1rem auto 0;
+  max-width:500px; position:relative; z-index:1;
+}
+.pp-gallery-item {
+  position:relative; border-radius:10px; overflow:hidden;
+  aspect-ratio:1; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  transition:transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pp-gallery-item:hover { transform:scale(1.03); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.pp-gallery-item img {
+  width:100%; height:100%; object-fit:cover; display:block;
+  transition:opacity 0.3s ease;
+}
+
+/* Delete button overlay */
+.pp-delete-btn {
+  position:absolute; top:6px; right:6px;
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(0,0,0,0.55); border:none;
+  color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity 0.25s ease;
+  z-index:2; font-size:0.8rem;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+}
+.pp-gallery-item:hover .pp-delete-btn,
+.pp-gallery-item:focus-within .pp-delete-btn { opacity:1; }
+@media (hover:none) { .pp-delete-btn { opacity:0.7; } }
+
+/* Skeleton loaders */
+.pp-skeleton {
+  border-radius:10px; aspect-ratio:1;
+  background:linear-gradient(110deg, rgba(232,180,184,0.08) 8%, rgba(245,213,200,0.15) 18%, rgba(232,180,184,0.08) 33%);
+  background-size:200% 100%;
+  animation:ppShimmer 1.5s linear infinite;
+}
+@keyframes ppShimmer {
+  0%   { background-position:200% 0; }
+  100% { background-position:-200% 0; }
+}
+
+/* Photo Proof Lightbox */
+#pp-lightbox {
+  position:fixed; inset:0; z-index:10000;
+  background:rgba(6,12,20,0.96);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.35s ease;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+}
+#pp-lightbox.open { opacity:1; pointer-events:all; }
+#pp-lightbox .pp-lb-img {
+  max-width:90vw; max-height:88vh;
+  border-radius:4px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(200,168,106,0.18);
+  object-fit:contain; display:block;
+  transition:opacity 0.25s ease;
+}
+#pp-lightbox .pp-lb-counter {
+  position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+  font-family:'Jost',sans-serif; font-size:0.85rem;
+  color:rgba(255,255,255,0.6); z-index:10001;
+}
+.pp-lb-btn {
+  position:fixed; top:50%; transform:translateY(-50%);
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(200,168,106,0.25);
+  color:rgba(255,255,255,0.82);
+  width:48px; height:48px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background 0.25s, border-color 0.25s;
+  z-index:10001; font-size:1.1rem;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.pp-lb-btn:hover { background:rgba(200,168,106,0.18); border-color:var(--gold); color:#fff; }
+#pp-lb-prev { left:clamp(8px, 2vw, 28px); }
+#pp-lb-next { right:clamp(8px, 2vw, 28px); }
+#pp-lb-close {
+  position:fixed; top:18px; right:20px;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(200,168,106,0.22);
+  color:rgba(255,255,255,0.75);
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:10001; font-size:1rem;
+}
+
+/* Activity photo area container */
+.pp-activity-area { margin-top:0.6rem; position:relative; z-index:1; }
+.pp-activity-area[data-hidden="true"] { display:none; }
+
+/* Memory Timeline Section */
+#memory-timeline { background:var(--ivory); overflow:hidden; padding:5rem 0; }
+#memory-timeline .section-wrap { max-width:1100px; margin:0 auto; padding:0 1.5rem; }
+.mt-day-group { margin-bottom:3rem; }
+.mt-day-label {
+  font-family:'Playfair Display',serif;
+  font-size:1.3rem; font-weight:500; color:var(--ocean);
+  margin-bottom:1rem; text-align:center;
+}
+.mt-activity-label {
+  font-family:'Cormorant Garamond',serif;
+  font-size:0.95rem; font-style:italic; color:var(--text-light);
+  margin:0.8rem 0 0.5rem; text-align:center;
+}
+.mt-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+  gap:8px;
+}
+.mt-grid .pp-gallery-item { aspect-ratio:1; }
+.mt-empty {
+  text-align:center; padding:3rem 1rem;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.05rem; font-style:italic; color:var(--text-light);
+}
+
+/* Responsive adjustments */
+@media (max-width:540px) {
+  .pp-gallery { grid-template-columns:repeat(2, 1fr); gap:6px; }
+  .mt-grid { grid-template-columns:repeat(2, 1fr); gap:6px; }
+  .pp-upload-btn { font-size:0.85rem; padding:0.55rem 1.2rem; }
+}
+@media (min-width:541px) and (max-width:768px) {
+  .pp-gallery { grid-template-columns:repeat(2, 1fr); }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1981,8 +2211,26 @@ button,input,textarea { font-family:inherit; }
           <button class="act-arrow act-arrow--prev" data-arrow="prev" aria-label="Previous">&#8592;</button>
           <button class="act-arrow act-arrow--next" data-arrow="next" aria-label="Next">&#8594;</button>
         </div>
-        <div class="act-caption-wrap"><span class="act-caption" data-caption-display="day2">Guess the Dress</span></div>
+        <div class="act-caption-wrap">
+          <span class="act-caption" data-caption-display="day2">Guess the Dress</span>
+          <span class="pp-photo-count" data-photo-count="day2"></span>
+          <span class="pp-completed-badge" data-completed="day2">Completed</span>
+        </div>
         <div class="act-dots" data-dots="day2"></div>
+
+        <!-- Photo Proof Area — Day 2 -->
+        <div class="pp-activity-area" data-activity-id="guess-the-dress" data-day="2">
+          <label class="pp-upload-btn">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Add Photos
+            <input type="file" accept="image/*" multiple capture="environment" data-upload="day2">
+          </label>
+          <div class="pp-progress-wrap" data-progress="day2">
+            <div class="pp-progress-bar"><div class="pp-progress-fill"></div></div>
+            <div class="pp-progress-text">Uploading...</div>
+          </div>
+          <div class="pp-gallery" data-gallery="day2"></div>
+        </div>
       </div>
     </div>
 
@@ -2046,11 +2294,52 @@ button,input,textarea { font-family:inherit; }
           <button class="act-arrow act-arrow--prev" data-arrow="prev" aria-label="Previous">&#8592;</button>
           <button class="act-arrow act-arrow--next" data-arrow="next" aria-label="Next">&#8594;</button>
         </div>
-        <div class="act-caption-wrap"><span class="act-caption" data-caption-display="day3">Rings Hunt</span></div>
+        <div class="act-caption-wrap">
+          <span class="act-caption" data-caption-display="day3">Rings Hunt</span>
+          <span class="pp-photo-count" data-photo-count="day3"></span>
+          <span class="pp-completed-badge" data-completed="day3">Completed</span>
+        </div>
         <div class="act-dots" data-dots="day3"></div>
+
+        <!-- Photo Proof Area — Day 3 -->
+        <div class="pp-activity-area" data-activity-id="rings-hunt" data-day="3">
+          <label class="pp-upload-btn">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Add Photos
+            <input type="file" accept="image/*" multiple capture="environment" data-upload="day3">
+          </label>
+          <div class="pp-progress-wrap" data-progress="day3">
+            <div class="pp-progress-bar"><div class="pp-progress-fill"></div></div>
+            <div class="pp-progress-text">Uploading...</div>
+          </div>
+          <div class="pp-gallery" data-gallery="day3"></div>
+        </div>
       </div>
     </div>
 
+  </div>
+</section>
+
+<!-- Photo Proof Lightbox -->
+<div id="pp-lightbox" role="dialog" aria-modal="true" aria-label="Photo proof lightbox">
+  <button id="pp-lb-close" aria-label="Close lightbox">&times;</button>
+  <button class="pp-lb-btn" id="pp-lb-prev" aria-label="Previous photo">&#8592;</button>
+  <img class="pp-lb-img" alt="Photo proof" />
+  <button class="pp-lb-btn" id="pp-lb-next" aria-label="Next photo">&#8594;</button>
+  <div class="pp-lb-counter"></div>
+</div>
+
+<!-- ╔═══════════════════════════════════════════════╗
+     ║           MEMORY TIMELINE                      ║
+     ╚═══════════════════════════════════════════════╝ -->
+<section id="memory-timeline">
+  <div class="section-wrap">
+    <p class="s-eyebrow reveal">Photo Proof</p>
+    <h2 class="s-title reveal">Memory <em>Timeline</em></h2>
+    <div class="gold-rule reveal"><span class="gold-dot"></span></div>
+    <div id="mt-content">
+      <p class="mt-empty">No photos yet — upload your first proof above!</p>
+    </div>
   </div>
 </section>
 
@@ -3140,6 +3429,485 @@ const galleryImages = [
     if (dc && dc.style.display === 'none') return;
     initSliderTrack(track);
   });
+})();
+
+/* ══════════════════════════════════════════════════
+   PHOTO PROOF SYSTEM
+══════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  /* ── Activity ID mapping ── */
+  var ACTIVITIES = {
+    day2: [
+      { id:'guess-the-dress',       caption:'Guess the Dress' },
+      { id:'kiss-the-miss-goodbye', caption:'Kiss the Miss Goodbye' },
+      { id:'dates-jar',             caption:'Dates Jar' },
+      { id:'bridal-advice-card',    caption:'Bridal Advice Card' }
+    ],
+    day3: [
+      { id:'rings-hunt',                  caption:'Rings Hunt' },
+      { id:'bubuka-and-bulaklak',         caption:'Bubuka and Bulaklak' },
+      { id:'dont-get-caught-on-camera',   caption:"Don't Get Caught on Camera" }
+    ]
+  };
+
+  /* Helper: slugify caption to activity ID */
+  function captionToId(caption) {
+    return caption.toLowerCase().replace(/['']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  }
+
+  /* ── Toast notifications ── */
+  var toastTimer = null;
+  function showToast(msg, type) {
+    var existing = document.querySelector('.pp-toast');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.className = 'pp-toast ' + (type || 'success');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){
+      el.classList.remove('show');
+      setTimeout(function(){ el.remove(); }, 400);
+    }, 3000);
+  }
+
+  /* ── Image compression ── */
+  function compressImage(file, maxWidth, quality) {
+    maxWidth = maxWidth || 1200;
+    quality  = quality  || 0.7;
+    return new Promise(function(resolve, reject) {
+      // If not an image, skip
+      if (!file.type.startsWith('image/')) { resolve(file); return; }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob) {
+            resolve(blob || file);
+          }, 'image/jpeg', quality);
+        };
+        img.onerror = function(){ resolve(file); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function(){ resolve(file); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ── Upload manager ── */
+  function uploadActivityPhoto(file, activityId, dayNumber, progressCb) {
+    return compressImage(file).then(function(blob) {
+      return new Promise(function(resolve, reject) {
+        var ts = Date.now();
+        var rand = Math.random().toString(36).substr(2, 8);
+        var path = 'activityPhotos/' + activityId + '/' + ts + '_' + rand + '.jpg';
+        var sRef = window._storageRef(window._storage, path);
+        var task = window._uploadBytesResumable(sRef, blob);
+
+        task.on('state_changed',
+          function(snap) {
+            var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            progressCb && progressCb(pct);
+          },
+          function(err) { reject(err); },
+          function() {
+            window._getDownloadURL(task.snapshot.ref).then(function(url) {
+              // Write metadata to Firestore
+              var colRef = window._fsCollection(window._db, 'activityPhotos');
+              window._fsAddDoc(colRef, {
+                activityId:  activityId,
+                day:         dayNumber,
+                imageUrl:    url,
+                storagePath: path,
+                uploadedAt:  window._fsTimestamp(),
+                uploadedBy:  ''
+              }).then(function() { resolve(url); })
+                .catch(reject);
+            }).catch(reject);
+          }
+        );
+      });
+    });
+  }
+
+  /* ── Sequential upload queue ── */
+  function uploadQueue(files, activityId, dayNumber, progressCb) {
+    var i = 0, total = files.length;
+    function next() {
+      if (i >= total) return Promise.resolve();
+      progressCb && progressCb(0, i + 1, total);
+      return uploadActivityPhoto(files[i], activityId, dayNumber, function(pct) {
+        progressCb && progressCb(pct, i + 1, total);
+      }).then(function() {
+        i++;
+        return next();
+      });
+    }
+    return next();
+  }
+
+  /* ── Delete handler ── */
+  function deleteActivityPhoto(docId, storagePath) {
+    var sRef = window._storageRef(window._storage, storagePath);
+    return window._deleteObject(sRef).then(function() {
+      var docRef = window._fsDoc(window._db, 'activityPhotos', docId);
+      return window._fsDeleteDoc(docRef);
+    }).then(function() {
+      showToast('Photo deleted', 'success');
+    }).catch(function(err) {
+      // If storage delete fails (file not found), still delete doc
+      if (err.code === 'storage/object-not-found') {
+        var docRef = window._fsDoc(window._db, 'activityPhotos', docId);
+        return window._fsDeleteDoc(docRef).then(function() {
+          showToast('Photo deleted', 'success');
+        });
+      }
+      console.error('Delete error:', err);
+      showToast('Failed to delete photo', 'error');
+    });
+  }
+
+  /* ── Gallery renderer ── */
+  function renderGallery(galleryEl, photos) {
+    galleryEl.innerHTML = '';
+    if (!photos.length) return;
+    photos.forEach(function(photo, idx) {
+      var item = document.createElement('div');
+      item.className = 'pp-gallery-item';
+      var img = document.createElement('img');
+      img.src = photo.imageUrl;
+      img.alt = 'Activity photo';
+      img.loading = 'lazy';
+      img.addEventListener('click', function() {
+        openPhotoLightbox(photos, idx);
+      });
+      item.appendChild(img);
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'pp-delete-btn';
+      delBtn.innerHTML = '&#128465;';
+      delBtn.title = 'Delete photo';
+      delBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (confirm('Delete this photo?')) {
+          deleteActivityPhoto(photo.docId, photo.storagePath);
+        }
+      });
+      item.appendChild(delBtn);
+      galleryEl.appendChild(item);
+    });
+  }
+
+  /* ── Show skeletons ── */
+  function showSkeletons(galleryEl, count) {
+    galleryEl.innerHTML = '';
+    for (var i = 0; i < (count || 3); i++) {
+      var sk = document.createElement('div');
+      sk.className = 'pp-skeleton';
+      galleryEl.appendChild(sk);
+    }
+  }
+
+  /* ── Real-time Firestore listener per activity ── */
+  var photoCache = {}; // activityId -> [photos]
+  var unsubscribers = {};
+
+  function listenToActivity(activityId, day) {
+    if (unsubscribers[activityId]) return; // already listening
+
+    var galleryEl = document.querySelector('.pp-gallery[data-gallery="day' + day + '"]');
+    if (galleryEl) showSkeletons(galleryEl, 3);
+
+    var colRef = window._fsCollection(window._db, 'activityPhotos');
+    var q = window._fsQuery(colRef,
+      window._fsWhere('activityId', '==', activityId),
+      window._fsOrderBy('uploadedAt', 'desc')
+    );
+
+    unsubscribers[activityId] = window._fsOnSnapshot(q, function(snapshot) {
+      var photos = [];
+      snapshot.forEach(function(docSnap) {
+        var d = docSnap.data();
+        photos.push({
+          docId:       docSnap.id,
+          activityId:  d.activityId,
+          day:         d.day,
+          imageUrl:    d.imageUrl,
+          storagePath: d.storagePath,
+          uploadedAt:  d.uploadedAt
+        });
+      });
+      photoCache[activityId] = photos;
+
+      // Update the gallery if this activity is currently visible
+      updateVisibleGallery(day);
+      updateBadges(day);
+      updateMemoryTimeline();
+    }, function(err) {
+      console.error('Firestore listen error for', activityId, err);
+    });
+  }
+
+  /* ── Update visible gallery based on current slide ── */
+  function updateVisibleGallery(day) {
+    var dayKey = 'day' + day;
+    var area = document.querySelector('.pp-activity-area[data-day="' + day + '"]');
+    if (!area) return;
+    var currentActivityId = area.getAttribute('data-activity-id');
+    var galleryEl = area.querySelector('.pp-gallery');
+    if (!galleryEl) return;
+    var photos = photoCache[currentActivityId] || [];
+    renderGallery(galleryEl, photos);
+  }
+
+  /* ── Update badges ── */
+  function updateBadges(day) {
+    var dayKey = 'day' + day;
+    var activities = ACTIVITIES[dayKey] || [];
+    var totalPhotos = 0;
+    var hasAny = false;
+
+    // Get current activity
+    var area = document.querySelector('.pp-activity-area[data-day="' + day + '"]');
+    if (!area) return;
+    var currentId = area.getAttribute('data-activity-id');
+    var currentPhotos = photoCache[currentId] || [];
+
+    // Count all photos for this day
+    activities.forEach(function(act) {
+      var p = photoCache[act.id] || [];
+      totalPhotos += p.length;
+      if (p.length > 0) hasAny = true;
+    });
+
+    var countEl = document.querySelector('[data-photo-count="' + dayKey + '"]');
+    var badgeEl = document.querySelector('[data-completed="' + dayKey + '"]');
+
+    if (countEl) {
+      countEl.textContent = currentPhotos.length > 0 ? '📸 ' + currentPhotos.length + ' Photo' + (currentPhotos.length !== 1 ? 's' : '') : '';
+    }
+    if (badgeEl) {
+      badgeEl.classList.toggle('visible', currentPhotos.length > 0);
+    }
+  }
+
+  /* ── Slide change hook ── */
+  function hookSlideChanges() {
+    // Override goTo in each slider to dispatch activity change events
+    document.querySelectorAll('.act-slider').forEach(function(track) {
+      var card = track.closest('.act-day-card');
+      var slides = track.querySelectorAll('.act-slide');
+      var day = track.dataset.slider; // 'day2' or 'day3'
+      var dayNum = parseInt(day.replace('day', ''));
+      var activities = ACTIVITIES[day] || [];
+
+      // MutationObserver on slides to detect active class change
+      var observer = new MutationObserver(function() {
+        var activeSlide = track.querySelector('.act-slide.active');
+        if (!activeSlide) return;
+        var caption = activeSlide.dataset.caption || '';
+        var actId = captionToId(caption);
+        var area = card.querySelector('.pp-activity-area');
+        if (area && area.getAttribute('data-activity-id') !== actId) {
+          area.setAttribute('data-activity-id', actId);
+          updateVisibleGallery(dayNum);
+          updateBadges(dayNum);
+        }
+      });
+
+      slides.forEach(function(slide) {
+        observer.observe(slide, { attributes: true, attributeFilter: ['class'] });
+      });
+    });
+  }
+
+  /* ── Photo Lightbox ── */
+  var lbPhotos = [], lbIndex = 0;
+
+  function openPhotoLightbox(photos, startIndex) {
+    lbPhotos = photos;
+    lbIndex  = startIndex || 0;
+    var lb = document.getElementById('pp-lightbox');
+    if (!lb) return;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    updateLightbox();
+  }
+
+  function closeLightbox() {
+    var lb = document.getElementById('pp-lightbox');
+    if (lb) lb.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function updateLightbox() {
+    var lb = document.getElementById('pp-lightbox');
+    if (!lb || !lbPhotos.length) return;
+    var img = lb.querySelector('.pp-lb-img');
+    var counter = lb.querySelector('.pp-lb-counter');
+    img.src = lbPhotos[lbIndex].imageUrl;
+    counter.textContent = (lbIndex + 1) + ' / ' + lbPhotos.length;
+  }
+
+  function lbPrev() {
+    if (lbIndex > 0) { lbIndex--; updateLightbox(); }
+  }
+  function lbNext() {
+    if (lbIndex < lbPhotos.length - 1) { lbIndex++; updateLightbox(); }
+  }
+
+  /* ── Memory Timeline ── */
+  function updateMemoryTimeline() {
+    var container = document.getElementById('mt-content');
+    if (!container) return;
+
+    var allPhotos = [];
+    Object.keys(photoCache).forEach(function(actId) {
+      photoCache[actId].forEach(function(p) { allPhotos.push(p); });
+    });
+
+    if (!allPhotos.length) {
+      container.innerHTML = '<p class="mt-empty">No photos yet — upload your first proof above!</p>';
+      return;
+    }
+
+    // Group by day
+    var grouped = {};
+    allPhotos.forEach(function(p) {
+      var dayKey = 'Day ' + p.day;
+      if (!grouped[dayKey]) grouped[dayKey] = {};
+      if (!grouped[dayKey][p.activityId]) grouped[dayKey][p.activityId] = [];
+      grouped[dayKey][p.activityId].push(p);
+    });
+
+    var html = '';
+    var dayKeys = Object.keys(grouped).sort();
+    dayKeys.forEach(function(dayLabel) {
+      html += '<div class="mt-day-group">';
+      html += '<h3 class="mt-day-label">' + dayLabel + '</h3>';
+      var acts = grouped[dayLabel];
+      Object.keys(acts).forEach(function(actId) {
+        // Find human-readable name
+        var actName = actId.replace(/-/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); });
+        html += '<p class="mt-activity-label">' + actName + '</p>';
+        html += '<div class="mt-grid">';
+        acts[actId].forEach(function(photo, idx) {
+          html += '<div class="pp-gallery-item" data-mt-act="' + actId + '" data-mt-idx="' + idx + '">';
+          html += '<img src="' + photo.imageUrl + '" alt="' + actName + '" loading="lazy">';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+
+    // Add click handlers for timeline lightbox
+    container.querySelectorAll('.pp-gallery-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var actId = item.dataset.mtAct;
+        var idx   = parseInt(item.dataset.mtIdx);
+        var photos = photoCache[actId] || [];
+        if (photos.length) openPhotoLightbox(photos, idx);
+      });
+    });
+  }
+
+  /* ── Wire everything up on DOM ready ── */
+  function init() {
+    // Start Firestore listeners for all activities
+    Object.keys(ACTIVITIES).forEach(function(dayKey) {
+      var dayNum = parseInt(dayKey.replace('day', ''));
+      ACTIVITIES[dayKey].forEach(function(act) {
+        listenToActivity(act.id, dayNum);
+      });
+    });
+
+    // Hook slide changes
+    hookSlideChanges();
+
+    // Wire upload inputs
+    document.querySelectorAll('input[data-upload]').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var files = Array.from(input.files);
+        if (!files.length) return;
+        var area = input.closest('.pp-activity-area');
+        var activityId = area.getAttribute('data-activity-id');
+        var dayNum = parseInt(area.dataset.day);
+        var progressWrap = area.querySelector('.pp-progress-wrap');
+        var progressFill = area.querySelector('.pp-progress-fill');
+        var progressText = area.querySelector('.pp-progress-text');
+
+        progressWrap.classList.add('active');
+
+        uploadQueue(files, activityId, dayNum, function(pct, current, total) {
+          progressFill.style.width = pct + '%';
+          progressText.textContent = 'Uploading ' + current + '/' + total + ' (' + pct + '%)';
+        }).then(function() {
+          showToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' uploaded!', 'success');
+          progressWrap.classList.remove('active');
+          progressFill.style.width = '0%';
+          input.value = '';
+        }).catch(function(err) {
+          console.error('Upload error:', err);
+          showToast('Upload failed — please try again', 'error');
+          progressWrap.classList.remove('active');
+          progressFill.style.width = '0%';
+          input.value = '';
+        });
+      });
+    });
+
+    // Wire lightbox controls
+    var lb = document.getElementById('pp-lightbox');
+    if (lb) {
+      document.getElementById('pp-lb-close').addEventListener('click', closeLightbox);
+      document.getElementById('pp-lb-prev').addEventListener('click', lbPrev);
+      document.getElementById('pp-lb-next').addEventListener('click', lbNext);
+      lb.addEventListener('click', function(e) {
+        if (e.target === lb) closeLightbox();
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape')     closeLightbox();
+        if (e.key === 'ArrowLeft')  lbPrev();
+        if (e.key === 'ArrowRight') lbNext();
+      });
+
+      // Touch swipe on lightbox
+      var lbStartX = 0, lbDx = 0;
+      lb.addEventListener('touchstart', function(e) {
+        lbStartX = e.touches[0].clientX;
+        lbDx = 0;
+      }, { passive: true });
+      lb.addEventListener('touchmove', function(e) {
+        lbDx = e.touches[0].clientX - lbStartX;
+      }, { passive: true });
+      lb.addEventListener('touchend', function() {
+        if (lbDx < -50) lbNext();
+        else if (lbDx > 50) lbPrev();
+      });
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>
 </body>
