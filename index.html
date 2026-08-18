@@ -3474,67 +3474,179 @@ const galleryImages = [
     }, 3000);
   }
 
+  /* ── Firebase readiness check ── */
+  function waitForFirebase() {
+    return new Promise(function(resolve, reject) {
+      // If already loaded, resolve immediately
+      if (window._storage && window._uploadBytesResumable && window._db) {
+        resolve(); return;
+      }
+      // Otherwise poll — module scripts load async from CDN
+      var attempts = 0;
+      var check = setInterval(function() {
+        attempts++;
+        if (window._storage && window._uploadBytesResumable && window._db) {
+          clearInterval(check);
+          resolve();
+        } else if (attempts > 50) { // ~5 seconds
+          clearInterval(check);
+          reject(new Error('Firebase failed to initialize. Check your internet connection and refresh the page.'));
+        }
+      }, 100);
+    });
+  }
+
+  /* ── Friendly Firebase error messages ── */
+  function firebaseErrorMessage(err) {
+    var code = (err && err.code) || '';
+    var map = {
+      'storage/unauthorized':        'Upload blocked — Firebase Storage rules deny access. See console for setup instructions.',
+      'storage/unauthenticated':     'Upload blocked — authentication required. Check Firebase Storage rules.',
+      'storage/unknown':             'Unknown Firebase Storage error. Check the browser console.',
+      'storage/retry-limit-exceeded':'Upload failed after too many retries. Check your connection.',
+      'storage/quota-exceeded':      'Firebase Storage quota exceeded. Free up space or upgrade your plan.',
+      'storage/canceled':            'Upload was canceled.',
+      'storage/object-not-found':    'Storage object not found.',
+      'storage/bucket-not-found':    'Firebase Storage bucket not found. Enable Storage in Firebase Console.',
+      'storage/invalid-argument':    'Invalid upload data. Try selecting the photo again.'
+    };
+    return map[code] || ('Upload failed: ' + (err.message || err.code || 'unknown error'));
+  }
+
   /* ── Image compression ── */
   function compressImage(file, maxWidth, quality) {
     maxWidth = maxWidth || 1200;
     quality  = quality  || 0.7;
     return new Promise(function(resolve, reject) {
       // If not an image, skip
-      if (!file.type.startsWith('image/')) { resolve(file); return; }
+      if (!file.type || !file.type.startsWith('image/')) {
+        console.warn('[PhotoProof] File is not an image type:', file.type);
+        resolve(file); return;
+      }
       var reader = new FileReader();
       reader.onload = function(e) {
         var img = new Image();
         img.onload = function() {
-          var w = img.width, h = img.height;
-          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-          var canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          var ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          canvas.toBlob(function(blob) {
-            resolve(blob || file);
-          }, 'image/jpeg', quality);
+          try {
+            var w = img.width, h = img.height;
+            if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(function(blob) {
+              if (blob) {
+                console.log('[PhotoProof] Compressed:', file.name, '→', (blob.size / 1024).toFixed(0) + 'KB');
+                resolve(blob);
+              } else {
+                console.warn('[PhotoProof] canvas.toBlob returned null, using original file');
+                resolve(file);
+              }
+            }, 'image/jpeg', quality);
+          } catch(e) {
+            console.error('[PhotoProof] Compression error:', e);
+            resolve(file); // fallback to original
+          }
         };
-        img.onerror = function(){ resolve(file); };
+        img.onerror = function() {
+          console.warn('[PhotoProof] Could not decode image, using original file');
+          resolve(file);
+        };
         img.src = e.target.result;
       };
-      reader.onerror = function(){ resolve(file); };
+      reader.onerror = function() {
+        console.warn('[PhotoProof] FileReader error, using original file');
+        resolve(file);
+      };
       reader.readAsDataURL(file);
     });
   }
 
   /* ── Upload manager ── */
   function uploadActivityPhoto(file, activityId, dayNumber, progressCb) {
-    return compressImage(file).then(function(blob) {
-      return new Promise(function(resolve, reject) {
-        var ts = Date.now();
-        var rand = Math.random().toString(36).substr(2, 8);
-        var path = 'activityPhotos/' + activityId + '/' + ts + '_' + rand + '.jpg';
-        var sRef = window._storageRef(window._storage, path);
-        var task = window._uploadBytesResumable(sRef, blob);
+    console.log('[PhotoProof] Starting upload for', file.name, '→ activity:', activityId, 'day:', dayNumber);
 
-        task.on('state_changed',
-          function(snap) {
-            var pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-            progressCb && progressCb(pct);
-          },
-          function(err) { reject(err); },
-          function() {
-            window._getDownloadURL(task.snapshot.ref).then(function(url) {
-              // Write metadata to Firestore
-              var colRef = window._fsCollection(window._db, 'activityPhotos');
-              window._fsAddDoc(colRef, {
-                activityId:  activityId,
-                day:         dayNumber,
-                imageUrl:    url,
-                storagePath: path,
-                uploadedAt:  window._fsTimestamp(),
-                uploadedBy:  ''
-              }).then(function() { resolve(url); })
-                .catch(reject);
-            }).catch(reject);
-          }
-        );
+    return waitForFirebase().then(function() {
+      return compressImage(file);
+    }).then(function(blob) {
+      return new Promise(function(resolve, reject) {
+        try {
+          var ts = Date.now();
+          var rand = Math.random().toString(36).substr(2, 8);
+          var storagePath = 'activities/day' + dayNumber + '/' + activityId + '/' + ts + '_' + rand + '.jpg';
+          console.log('[PhotoProof] Upload path:', storagePath);
+
+          var sRef = window._storageRef(window._storage, storagePath);
+
+          // Set explicit metadata so Firebase knows the content type
+          var metadata = { contentType: 'image/jpeg' };
+          var uploadTask = window._uploadBytesResumable(sRef, blob, metadata);
+
+          console.log('[PhotoProof] Upload task created, listening for state changes...');
+
+          uploadTask.on('state_changed',
+            // Progress handler
+            function(snapshot) {
+              var pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+              console.log('[PhotoProof] Progress:', pct + '%', '(' + snapshot.bytesTransferred + '/' + snapshot.totalBytes + ' bytes)', 'state:', snapshot.state);
+              progressCb && progressCb(pct);
+            },
+            // Error handler
+            function(error) {
+              var msg = firebaseErrorMessage(error);
+              console.error('[PhotoProof] Upload FAILED:', error.code, error.message);
+              console.error('[PhotoProof] ─── If you see storage/unauthorized or storage/unauthenticated:');
+              console.error('[PhotoProof]     1. Go to Firebase Console → Storage → Rules');
+              console.error('[PhotoProof]     2. Set rules to:');
+              console.error('[PhotoProof]        rules_version = "2";');
+              console.error('[PhotoProof]        service firebase.storage {');
+              console.error('[PhotoProof]          match /b/{bucket}/o {');
+              console.error('[PhotoProof]            match /{allPaths=**} {');
+              console.error('[PhotoProof]              allow read, write: if true;');
+              console.error('[PhotoProof]            }');
+              console.error('[PhotoProof]          }');
+              console.error('[PhotoProof]        }');
+              reject(new Error(msg));
+            },
+            // Complete handler
+            function() {
+              console.log('[PhotoProof] Upload complete, getting download URL...');
+              window._getDownloadURL(uploadTask.snapshot.ref).then(function(url) {
+                console.log('[PhotoProof] Download URL obtained:', url.substring(0, 80) + '...');
+                // Write metadata to Firestore
+                var colRef = window._fsCollection(window._db, 'activityPhotos');
+                return window._fsAddDoc(colRef, {
+                  activityId:  activityId,
+                  day:         dayNumber,
+                  imageUrl:    url,
+                  storagePath: storagePath,
+                  uploadedAt:  window._fsTimestamp(),
+                  uploadedBy:  ''
+                });
+              }).then(function() {
+                console.log('[PhotoProof] Firestore doc written successfully');
+                resolve();
+              }).catch(function(err) {
+                console.error('[PhotoProof] Post-upload error (getDownloadURL or Firestore):', err);
+                reject(new Error('Photo uploaded but failed to save metadata: ' + err.message));
+              });
+            }
+          );
+
+          // Safety timeout — if nothing happens in 60 seconds, reject
+          setTimeout(function() {
+            if (uploadTask.snapshot.state === 'running' && uploadTask.snapshot.bytesTransferred === 0) {
+              console.error('[PhotoProof] Upload timed out at 0 bytes after 60s. Canceling.');
+              console.error('[PhotoProof] This usually means Firebase Storage is not enabled or rules block the upload.');
+              uploadTask.cancel();
+              reject(new Error('Upload timed out — Firebase Storage may not be enabled. Check Firebase Console → Storage.'));
+            }
+          }, 60000);
+
+        } catch(err) {
+          console.error('[PhotoProof] Error creating upload task:', err);
+          reject(new Error('Failed to start upload: ' + err.message));
+        }
       });
     });
   }
@@ -3557,21 +3669,24 @@ const galleryImages = [
 
   /* ── Delete handler ── */
   function deleteActivityPhoto(docId, storagePath) {
-    var sRef = window._storageRef(window._storage, storagePath);
-    return window._deleteObject(sRef).then(function() {
+    console.log('[PhotoProof] Deleting photo:', docId, storagePath);
+    return waitForFirebase().then(function() {
+      var sRef = window._storageRef(window._storage, storagePath);
+      return window._deleteObject(sRef);
+    }).then(function() {
       var docRef = window._fsDoc(window._db, 'activityPhotos', docId);
       return window._fsDeleteDoc(docRef);
     }).then(function() {
       showToast('Photo deleted', 'success');
     }).catch(function(err) {
-      // If storage delete fails (file not found), still delete doc
+      console.error('[PhotoProof] Delete error:', err.code, err.message);
+      // If storage delete fails (file not found), still delete Firestore doc
       if (err.code === 'storage/object-not-found') {
         var docRef = window._fsDoc(window._db, 'activityPhotos', docId);
         return window._fsDeleteDoc(docRef).then(function() {
           showToast('Photo deleted', 'success');
         });
       }
-      console.error('Delete error:', err);
       showToast('Failed to delete photo', 'error');
     });
   }
@@ -3842,28 +3957,49 @@ const galleryImages = [
         var files = Array.from(input.files);
         if (!files.length) return;
         var area = input.closest('.pp-activity-area');
+        if (!area) { console.error('[PhotoProof] Could not find .pp-activity-area parent'); return; }
         var activityId = area.getAttribute('data-activity-id');
         var dayNum = parseInt(area.dataset.day);
         var progressWrap = area.querySelector('.pp-progress-wrap');
         var progressFill = area.querySelector('.pp-progress-fill');
         var progressText = area.querySelector('.pp-progress-text');
+        var uploadBtn = area.querySelector('.pp-upload-btn');
 
+        console.log('[PhotoProof] Files selected:', files.length, 'for activity:', activityId, 'day:', dayNum);
+
+        // Show progress, hide upload button during upload
         progressWrap.classList.add('active');
+        if (uploadBtn) uploadBtn.style.display = 'none';
+        progressFill.style.width = '0%';
+        progressText.textContent = 'Preparing upload...';
+
+        function resetUI() {
+          progressWrap.classList.remove('active');
+          progressFill.style.width = '0%';
+          progressText.textContent = '';
+          if (uploadBtn) uploadBtn.style.display = '';
+          input.value = '';
+        }
 
         uploadQueue(files, activityId, dayNum, function(pct, current, total) {
           progressFill.style.width = pct + '%';
           progressText.textContent = 'Uploading ' + current + '/' + total + ' (' + pct + '%)';
         }).then(function() {
           showToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' uploaded!', 'success');
-          progressWrap.classList.remove('active');
-          progressFill.style.width = '0%';
-          input.value = '';
+          resetUI();
         }).catch(function(err) {
-          console.error('Upload error:', err);
-          showToast('Upload failed — please try again', 'error');
-          progressWrap.classList.remove('active');
+          console.error('[PhotoProof] Upload chain error:', err);
+          var msg = err.message || 'Upload failed — please try again';
+          showToast(msg, 'error');
+          // Also show the error in the progress text so user doesn't miss it
+          progressText.textContent = msg;
+          progressText.style.color = '#c62828';
           progressFill.style.width = '0%';
-          input.value = '';
+          // After 5 seconds, reset UI so user can retry
+          setTimeout(function() {
+            resetUI();
+            progressText.style.color = '';
+          }, 5000);
         });
       });
     });
