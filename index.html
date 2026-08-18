@@ -3704,9 +3704,9 @@ const galleryImages = [
     if (galleryEl) showSkeletons(galleryEl, 3);
 
     var colRef = window._fsCollection(window._db, 'activityPhotos');
+    // Single-field where() needs no composite index; sort client-side instead
     var q = window._fsQuery(colRef,
-      window._fsWhere('activityId', '==', activityId),
-      window._fsOrderBy('uploadedAt', 'desc')
+      window._fsWhere('activityId', '==', activityId)
     );
 
     unsubscribers[activityId] = window._fsOnSnapshot(q, function(snapshot) {
@@ -3721,6 +3721,12 @@ const galleryImages = [
           storagePath: d.storagePath,
           uploadedAt:  d.uploadedAt
         });
+      });
+      // Sort newest-first client-side (avoids needing a composite index)
+      photos.sort(function(a, b) {
+        var ta = a.uploadedAt && a.uploadedAt.toMillis ? a.uploadedAt.toMillis() : 0;
+        var tb = b.uploadedAt && b.uploadedAt.toMillis ? b.uploadedAt.toMillis() : 0;
+        return tb - ta;
       });
       photoCache[activityId] = photos;
 
