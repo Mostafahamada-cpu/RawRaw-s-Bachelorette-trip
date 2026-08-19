@@ -1009,40 +1009,120 @@ button,input,textarea { font-family:inherit; }
   cursor:pointer; z-index:10001; font-size:1rem;
 }
 
-/* Activity photo area container */
-.pp-activity-area { margin-top:0.6rem; position:relative; z-index:1; }
-.pp-activity-area[data-hidden="true"] { display:none; }
+/* ── Bingo Photo Proof standalone section ── */
+#bingo-photo-proof { background:var(--ivory); overflow:hidden; padding:5rem 0; }
+#bingo-photo-proof .section-wrap { max-width:1100px; margin:0 auto; padding:0 1.5rem; }
 
-/* Memory Timeline Section */
-#memory-timeline { background:var(--ivory); overflow:hidden; padding:5rem 0; }
-#memory-timeline .section-wrap { max-width:1100px; margin:0 auto; padding:0 1.5rem; }
-.mt-day-group { margin-bottom:3rem; }
-.mt-day-label {
-  font-family:'Playfair Display',serif;
-  font-size:1.3rem; font-weight:500; color:var(--ocean);
-  margin-bottom:1rem; text-align:center;
+#bingo-photo-proof .bpp-upload-area {
+  display:flex; flex-direction:column; align-items:center;
+  margin:1.5rem auto 0; max-width:500px;
 }
-.mt-activity-label {
-  font-family:'Cormorant Garamond',serif;
-  font-size:0.95rem; font-style:italic; color:var(--text-light);
-  margin:0.8rem 0 0.5rem; text-align:center;
+
+#bingo-photo-proof .bpp-upload-btn {
+  display:inline-flex; align-items:center; gap:0.6rem;
+  padding:0.75rem 2rem;
+  font-family:'Jost',sans-serif; font-size:0.95rem; font-weight:400;
+  color:var(--text-mid);
+  background:linear-gradient(135deg, rgba(232,180,184,0.18) 0%, rgba(245,213,200,0.22) 100%);
+  border:1px solid rgba(232,180,184,0.35);
+  border-radius:30px; cursor:pointer;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transition:all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  position:relative;
 }
-.mt-grid {
+#bingo-photo-proof .bpp-upload-btn:hover {
+  background:linear-gradient(135deg, rgba(232,180,184,0.32) 0%, rgba(245,213,200,0.38) 100%);
+  border-color:rgba(232,180,184,0.55);
+  box-shadow:0 4px 18px rgba(232,180,184,0.18);
+  transform:translateY(-1px);
+}
+#bingo-photo-proof .bpp-upload-btn svg {
+  width:20px; height:20px; stroke:var(--text-mid); fill:none; stroke-width:1.5;
+}
+#bingo-photo-proof .bpp-upload-btn input[type="file"] {
+  position:absolute; inset:0; opacity:0; cursor:pointer;
+}
+
+#bingo-photo-proof .bpp-progress-wrap {
+  display:none; margin:1rem auto 0; max-width:300px;
+  text-align:center; width:100%;
+}
+#bingo-photo-proof .bpp-progress-wrap.active { display:block; }
+#bingo-photo-proof .bpp-progress-bar {
+  height:4px; border-radius:4px;
+  background:rgba(232,180,184,0.18);
+  overflow:hidden;
+}
+#bingo-photo-proof .bpp-progress-fill {
+  height:100%; width:0%; border-radius:4px;
+  background:linear-gradient(90deg, #E8B4B8, #F5D5C8);
+  transition:width 0.3s ease;
+}
+#bingo-photo-proof .bpp-progress-text {
+  font-size:0.75rem; color:var(--text-light);
+  margin-top:0.3rem; font-family:'Jost',sans-serif;
+}
+
+#bingo-photo-proof .bpp-photo-count {
+  display:inline-flex; align-items:center; gap:0.3rem;
+  font-family:'Jost',sans-serif; font-size:0.82rem;
+  color:var(--text-light); margin-top:0.6rem;
+}
+
+#bingo-photo-proof .bpp-gallery {
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
-  gap:8px;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:10px; margin:1.5rem auto 0;
+  max-width:700px;
 }
-.mt-grid .pp-gallery-item { aspect-ratio:1; }
-.mt-empty {
-  text-align:center; padding:3rem 1rem;
+#bingo-photo-proof .bpp-gallery-item {
+  position:relative; border-radius:10px; overflow:hidden;
+  aspect-ratio:1; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  transition:transform 0.25s ease, box-shadow 0.25s ease;
+}
+#bingo-photo-proof .bpp-gallery-item:hover {
+  transform:scale(1.03); box-shadow:0 6px 20px rgba(0,0,0,0.12);
+}
+#bingo-photo-proof .bpp-gallery-item img {
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+#bingo-photo-proof .bpp-delete-btn {
+  position:absolute; top:6px; right:6px;
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(0,0,0,0.55); border:none;
+  color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity 0.25s ease;
+  z-index:2; font-size:0.8rem;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+}
+#bingo-photo-proof .bpp-gallery-item:hover .bpp-delete-btn,
+#bingo-photo-proof .bpp-gallery-item:focus-within .bpp-delete-btn { opacity:1; }
+@media (hover:none) { #bingo-photo-proof .bpp-delete-btn { opacity:0.7; } }
+
+#bingo-photo-proof .bpp-empty {
+  text-align:center; padding:2.5rem 1rem;
   font-family:'Cormorant Garamond',serif;
   font-size:1.05rem; font-style:italic; color:var(--text-light);
 }
 
+@media (max-width:600px) {
+  #bingo-photo-proof .bpp-gallery {
+    grid-template-columns:repeat(3, 1fr);
+    gap:6px;
+  }
+}
+
+/* Activity photo area container */
+.pp-activity-area { margin-top:0.6rem; position:relative; z-index:1; }
+.pp-activity-area[data-hidden="true"] { display:none; }
+
+/* (Memory Timeline CSS removed — replaced by #bingo-photo-proof styles above) */
+
 /* Responsive adjustments */
 @media (max-width:540px) {
   .pp-gallery { grid-template-columns:repeat(2, 1fr); gap:6px; }
-  .mt-grid { grid-template-columns:repeat(2, 1fr); gap:6px; }
   .pp-upload-btn { font-size:0.85rem; padding:0.55rem 1.2rem; }
 }
 @media (min-width:541px) and (max-width:768px) {
@@ -2208,20 +2288,6 @@ button,input,textarea { font-family:inherit; }
           <span class="pp-completed-badge" data-completed="day2">Completed</span>
         </div>
         <div class="act-dots" data-dots="day2"></div>
-
-        <!-- Photo Proof Area — Day 2 -->
-        <div class="pp-activity-area" data-activity-id="guess-the-dress" data-day="2">
-          <label class="pp-upload-btn">
-            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Add Photos
-            <input type="file" accept="image/*" multiple data-upload="day2">
-          </label>
-          <div class="pp-progress-wrap" data-progress="day2">
-            <div class="pp-progress-bar"><div class="pp-progress-fill"></div></div>
-            <div class="pp-progress-text">Uploading...</div>
-          </div>
-          <div class="pp-gallery" data-gallery="day2"></div>
-        </div>
       </div>
     </div>
 
@@ -2291,20 +2357,6 @@ button,input,textarea { font-family:inherit; }
           <span class="pp-completed-badge" data-completed="day3">Completed</span>
         </div>
         <div class="act-dots" data-dots="day3"></div>
-
-        <!-- Photo Proof Area — Day 3 -->
-        <div class="pp-activity-area" data-activity-id="rings-hunt" data-day="3">
-          <label class="pp-upload-btn">
-            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Add Photos
-            <input type="file" accept="image/*" multiple data-upload="day3">
-          </label>
-          <div class="pp-progress-wrap" data-progress="day3">
-            <div class="pp-progress-bar"><div class="pp-progress-fill"></div></div>
-            <div class="pp-progress-text">Uploading...</div>
-          </div>
-          <div class="pp-gallery" data-gallery="day3"></div>
-        </div>
       </div>
     </div>
 
@@ -2321,16 +2373,31 @@ button,input,textarea { font-family:inherit; }
 </div>
 
 <!-- ╔═══════════════════════════════════════════════╗
-     ║           MEMORY TIMELINE                      ║
+     ║           BINGO PHOTO PROOF                     ║
      ╚═══════════════════════════════════════════════╝ -->
-<section id="memory-timeline">
+<section id="bingo-photo-proof">
   <div class="section-wrap">
     <p class="s-eyebrow reveal">Photo Proof</p>
-    <h2 class="s-title reveal">Memory <em>Timeline</em></h2>
+    <h2 class="s-title reveal">Bingo <em>Photo Proof</em></h2>
     <div class="gold-rule reveal"><span class="gold-dot"></span></div>
-    <div id="mt-content">
-      <p class="mt-empty">No photos yet — upload your first proof above!</p>
+
+    <!-- Upload area -->
+    <div class="bpp-upload-area">
+      <label class="bpp-upload-btn">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Upload Photos
+        <input type="file" accept="image/*" multiple id="bpp-file-input">
+      </label>
+      <div class="bpp-progress-wrap" id="bpp-progress">
+        <div class="bpp-progress-bar"><div class="bpp-progress-fill"></div></div>
+        <div class="bpp-progress-text">Uploading...</div>
+      </div>
+      <span class="bpp-photo-count" id="bpp-count"></span>
     </div>
+
+    <!-- Gallery / empty state -->
+    <div id="bpp-gallery" class="bpp-gallery"></div>
+    <p class="bpp-empty" id="bpp-empty">No photos yet — upload your first bingo proof!</p>
   </div>
 </section>
 
@@ -3733,7 +3800,7 @@ const galleryImages = [
       // Update the gallery if this activity is currently visible
       updateVisibleGallery(day);
       updateBadges(day);
-      updateMemoryTimeline();
+      updateBingoGallery();
     }, function(err) {
       console.error('Firestore listen error for', activityId, err);
     });
@@ -3847,67 +3914,57 @@ const galleryImages = [
     if (lbIndex < lbPhotos.length - 1) { lbIndex++; updateLightbox(); }
   }
 
-  /* ── Memory Timeline ── */
-  function updateMemoryTimeline() {
-    var container = document.getElementById('mt-content');
-    if (!container) return;
+  /* ── Bingo Photo Proof standalone gallery ── */
+  var BINGO_ACTIVITY_ID = 'bingo-photo-proof';
 
-    var allPhotos = [];
-    Object.keys(photoCache).forEach(function(actId) {
-      photoCache[actId].forEach(function(p) { allPhotos.push(p); });
-    });
+  function updateBingoGallery() {
+    var gallery = document.getElementById('bpp-gallery');
+    var emptyEl = document.getElementById('bpp-empty');
+    var countEl = document.getElementById('bpp-count');
+    if (!gallery) return;
 
-    if (!allPhotos.length) {
-      container.innerHTML = '<p class="mt-empty">No photos yet — upload your first proof above!</p>';
-      return;
+    var photos = photoCache[BINGO_ACTIVITY_ID] || [];
+
+    // Toggle empty state
+    if (emptyEl) emptyEl.style.display = photos.length ? 'none' : '';
+
+    // Update count
+    if (countEl) {
+      countEl.textContent = photos.length ? photos.length + ' photo' + (photos.length !== 1 ? 's' : '') : '';
     }
 
-    // Group by day
-    var grouped = {};
-    allPhotos.forEach(function(p) {
-      var dayKey = 'Day ' + p.day;
-      if (!grouped[dayKey]) grouped[dayKey] = {};
-      if (!grouped[dayKey][p.activityId]) grouped[dayKey][p.activityId] = [];
-      grouped[dayKey][p.activityId].push(p);
-    });
+    // Render gallery
+    gallery.innerHTML = '';
+    if (!photos.length) return;
 
-    var html = '';
-    var dayKeys = Object.keys(grouped).sort();
-    dayKeys.forEach(function(dayLabel) {
-      html += '<div class="mt-day-group">';
-      html += '<h3 class="mt-day-label">' + dayLabel + '</h3>';
-      var acts = grouped[dayLabel];
-      Object.keys(acts).forEach(function(actId) {
-        // Find human-readable name
-        var actName = actId.replace(/-/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); });
-        html += '<p class="mt-activity-label">' + actName + '</p>';
-        html += '<div class="mt-grid">';
-        acts[actId].forEach(function(photo, idx) {
-          html += '<div class="pp-gallery-item" data-mt-act="' + actId + '" data-mt-idx="' + idx + '">';
-          html += '<img src="' + photo.imageUrl + '" alt="' + actName + '" loading="lazy">';
-          html += '</div>';
-        });
-        html += '</div>';
+    photos.forEach(function(photo, idx) {
+      var item = document.createElement('div');
+      item.className = 'bpp-gallery-item';
+      var img = document.createElement('img');
+      img.src = photo.imageUrl;
+      img.alt = 'Bingo Photo Proof';
+      img.loading = 'lazy';
+      img.addEventListener('click', function() { openPhotoLightbox(photos, idx); });
+      item.appendChild(img);
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'bpp-delete-btn';
+      delBtn.innerHTML = '&times;';
+      delBtn.title = 'Delete photo';
+      delBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (confirm('Delete this photo?')) {
+          deleteActivityPhoto(photo.docId, photo.storagePath);
+        }
       });
-      html += '</div>';
-    });
-
-    container.innerHTML = html;
-
-    // Add click handlers for timeline lightbox
-    container.querySelectorAll('.pp-gallery-item').forEach(function(item) {
-      item.addEventListener('click', function() {
-        var actId = item.dataset.mtAct;
-        var idx   = parseInt(item.dataset.mtIdx);
-        var photos = photoCache[actId] || [];
-        if (photos.length) openPhotoLightbox(photos, idx);
-      });
+      item.appendChild(delBtn);
+      gallery.appendChild(item);
     });
   }
 
   /* ── Wire everything up on DOM ready ── */
   function init() {
-    // Start Firestore listeners for all activities
+    // Start Firestore listeners for all day activities
     Object.keys(ACTIVITIES).forEach(function(dayKey) {
       var dayNum = parseInt(dayKey.replace('day', ''));
       ACTIVITIES[dayKey].forEach(function(act) {
@@ -3915,8 +3972,55 @@ const galleryImages = [
       });
     });
 
+    // Start Firestore listener for standalone Bingo Photo Proof (day 0 = standalone)
+    listenToActivity(BINGO_ACTIVITY_ID, 0);
+
     // Hook slide changes
     hookSlideChanges();
+
+    // Wire standalone Bingo Photo Proof upload
+    var bppInput = document.getElementById('bpp-file-input');
+    if (bppInput) {
+      bppInput.addEventListener('change', function() {
+        var files = Array.from(bppInput.files);
+        if (!files.length) return;
+        var progressWrap = document.getElementById('bpp-progress');
+        var progressFill = progressWrap.querySelector('.bpp-progress-fill');
+        var progressText = progressWrap.querySelector('.bpp-progress-text');
+        var uploadBtn    = bppInput.closest('.bpp-upload-btn');
+
+        console.log('[BingoPhotoProof] Files selected:', files.length);
+
+        progressWrap.classList.add('active');
+        if (uploadBtn) uploadBtn.style.display = 'none';
+        progressFill.style.width = '0%';
+        progressText.textContent = 'Preparing upload...';
+
+        function resetUI() {
+          progressWrap.classList.remove('active');
+          progressFill.style.width = '0%';
+          progressText.textContent = '';
+          if (uploadBtn) uploadBtn.style.display = '';
+          bppInput.value = '';
+        }
+
+        uploadQueue(files, BINGO_ACTIVITY_ID, 0, function(pct, current, total) {
+          progressFill.style.width = pct + '%';
+          progressText.textContent = 'Uploading ' + current + '/' + total + ' (' + pct + '%)';
+        }).then(function() {
+          showToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' uploaded!', 'success');
+          resetUI();
+        }).catch(function(err) {
+          console.error('[BingoPhotoProof] Upload error:', err);
+          var msg = err.message || 'Upload failed — please try again';
+          showToast(msg, 'error');
+          progressText.textContent = msg;
+          progressText.style.color = '#c62828';
+          progressFill.style.width = '0%';
+          setTimeout(function() { resetUI(); progressText.style.color = ''; }, 5000);
+        });
+      });
+    }
 
     // Wire upload inputs
     document.querySelectorAll('input[data-upload]').forEach(function(input) {
